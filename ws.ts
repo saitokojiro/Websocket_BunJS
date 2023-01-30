@@ -22,7 +22,7 @@ Bun.serve({
     let user: any = url.searchParams.get("user");
     console.log(token)
     console.log(user)
-    if (token !== null && user !== null) {
+    if (token !== null && user !== null && token !== "null" && user !== "null" ) {
       server.upgrade(req, {
         data: {
           _logger: true,
@@ -33,20 +33,13 @@ Bun.serve({
         }
       });
       return;
-    } else {
-      server.upgrade(req, {
-        data: {
-          _logger: false
-        }
-      });
-
-      return;
-    }
+    } 
     return new Response("Regular HTTP response");
   },
   websocket: {
     
     open(ws) {
+      //console.log(ws.data._logger)
       //@ts-ignore
       if (!ws.data._logger) {
         setTimeout(() => {
