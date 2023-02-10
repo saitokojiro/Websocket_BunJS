@@ -5,7 +5,7 @@ export interface ISMessageSend {
   id: any;
   message: string;
   isMedia: boolean;
-  typeMedia: any;
+  typeMedia: string;
   media: string;
   date: string;
 }
