@@ -5,7 +5,7 @@ import { escapeHTML } from "bun";
 let msgServer = () => {
   console.log("Server Info :");
   console.log("Status: running");
-  console.log("Engine: Bun.js 0.5.1");
+  console.log("Engine: Bun.js 0.5.5");
   console.log("Version: 0.0.5");
 };
 
@@ -20,6 +20,12 @@ let sockets: any[] = [];
 let room: any[] = [];
 let userData: any[] = [];
 let counter: number = 0;
+
+let customHeader: HeadersInit = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Credentials": "true",
+  "Access-Control-Allow-Origin": "http://127.0.0.1:3000"
+};
 
 Bun.serve({
   port: 3987,
@@ -48,48 +54,31 @@ Bun.serve({
     if (url.pathname === "/connection" && req.method === "POST") {
       //console.log(req)
       console.log(escapeHTML(url.searchParams.get("user")));
-      let resp = {
-        data: {
-          User: escapeHTML(url.searchParams.get("user")),
-          id: crypto.randomUUID()
-        },
-        response: "method " + req.method + " path : " + url.pathname
-      };
-
-      let res = new Response(JSON.stringify(resp), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Origin": "http://127.0.0.1:3000"
-        }
-      });
-      res.headers.append("Set-Cookie", "id_User=" + resp.data.id + "; HttpOnly; SameSite=None; Secure" + "tokenss=" + resp.data.id + "; HttpOnly; SameSite=None; Secure");
-      res.headers.append("Set-Cookie", "CSRF_TOKEN=" + crypto.randomUUID() + "; HttpOnly; SameSite=None; Secure" + "tokenss=" + resp.data.id + "; HttpOnly; SameSite=None; Secure");
-      return res;
-    }
-
-    if (url.pathname === "/connection" && req.method === "GET") {
-      //console.log(req)
-      console.log("------------");
-      let cookieClient = cookieParser.parse(req.headers.get("cookie"));
-      let userParams = escapeHTML(url.searchParams.get("user"));
-      console.log();
-
-      if (cookieClient.id_User !== undefined && cookieClient.CSRF_TOKEN !== undefined && userParams !== undefined) {
-        server.upgrade(req, {
+      if (escapeHTML(url.searchParams.get("user")) !== null) {
+        let resp = {
           data: {
-            _logger: true,
-            token: cookieClient.id_User,
-            CSRF_TOKEN: cookieClient.CSRF_TOKEN,
-            user: userParams,
-            room: room,
-            counter: counter
-          }
+            User: escapeHTML(url.searchParams.get("user")),
+            id: crypto.randomUUID()
+          },
+          response: "method " + req.method + " path : " + url.pathname
+        };
+
+        let res = new Response(JSON.stringify(resp), {
+          status: 200,
+          headers: customHeader
+          /*
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Origin": "http://127.0.0.1:3000"
+          }*/
         });
-        return;
-      }else{
-        return new Response('error', {
+        res.headers.append("Set-Cookie", "id_User=" + resp.data.id + "; HttpOnly; SameSite=None; Secure");
+        res.headers.append("Set-Cookie", "token=" + resp.data.id + "; HttpOnly; SameSite=None; Secure");
+        res.headers.append("Set-Cookie", "CSRF_TOKEN=" + crypto.randomUUID() + "; HttpOnly; SameSite=None; Secure");
+        return res;
+      } else {
+        return new Response("error", {
           status: 401,
           headers: {
             "Content-Type": "application/json",
@@ -98,16 +87,82 @@ Bun.serve({
           }
         });
       }
+    }
 
-      // return new Response("method "+ req.method + " path : " + url.pathname)
-      /*return new Response(JSON.stringify(resp), {
+    if (url.pathname === "/connection" && req.method === "GET") {
+      //console.log(req)
+      if (req.headers.get("cookie") !== null) {
+        console.log("------------");
+        console.log(req.headers.get("cookie"));
+        let cookieClient = cookieParser.parse(req.headers.get("cookie"));
+
+        let userParams = escapeHTML(url.searchParams.get("user"));
+        console.log(userParams);
+        if (cookieClient.id_User !== undefined && cookieClient.CSRF_TOKEN !== undefined && userParams !== undefined) {
+          if (cookieClient.id_User !== null && cookieClient.CSRF_TOKEN !== null && userParams !== null) {
+            console.log("ok");
+            server.upgrade(req, {
+              data: {
+                _logger: true,
+                token: cookieClient.id_User,
+                CSRF_TOKEN: cookieClient.CSRF_TOKEN,
+                user: userParams,
+                room: room,
+                counter: counter
+              }
+            });
+            return;
+          } else {
+            return new Response("error", {
+              status: 401,
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Allow-Origin": "http://127.0.0.1:3000"
+              }
+            });
+          }
+        } else {
+          return new Response("error", {
+            status: 401,
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Credentials": "true",
+              "Access-Control-Allow-Origin": "http://127.0.0.1:3000"
+            }
+          });
+        }
+      } else {
+        return new Response("cookie empty", {
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Origin": "http://127.0.0.1:3000"
+          }
+        });
+      }
+    }
+    if (url.pathname === "/logout" && req.method === "GET") {
+      let logoutJson: object = {
+        status: "logout",
+        redirect:"/"
+      };
+      let res = new Response(JSON.stringify(logoutJson), {
         status: 200,
+        headers: customHeader
+        /*
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Credentials": "true",
           "Access-Control-Allow-Origin": "http://127.0.0.1:3000"
-        }
-      });*/
+        }*/
+      });
+      res.headers.append("Set-Cookie", "id_User=expired; HttpOnly; SameSite=None; Secure ;expires=Thu, 01 Jan 1970 00:00:00 GMT");
+      res.headers.append("Set-Cookie", "token=expired; HttpOnly; SameSite=None; Secure;expires=Thu, 01 Jan 1970 00:00:00 GMT");
+      res.headers.append("Set-Cookie", "CSRF_TOKEN=expired; HttpOnly; SameSite=None; Secure;expires=Thu, 01 Jan 1970 00:00:0 GMT");
+
+      return res;
     }
 
     return new Response("Regular HTTP response : 200 ");
@@ -135,14 +190,14 @@ Bun.serve({
         user: escapeHTML(ws.data.user),
         id_User: escapeHTML(ws.data.token)
       });
-      console.log(ws.data);
+      //console.log(ws.data);
       let listUserData = { cat: "userlist", list: userData };
-      console.log(userData);
+      //console.log(userData);
 
       //@ts-ignore
       ws.publish("welcome", JSON.stringify(messageAll));
       ws.publish("UserList", JSON.stringify(listUserData));
-      ws.send(JSON.stringify({ token: escapeHTML(ws.data.token)}));
+      ws.send(JSON.stringify({ token: escapeHTML(ws.data.token) }));
 
       sockets.some((el) => {
         console.log(el.data.token);
@@ -151,7 +206,6 @@ Bun.serve({
 
       counter++;
     },
-
 
     message(ws, message) {
       //@ts-ignore
@@ -178,7 +232,6 @@ Bun.serve({
         });
       }
     },
-
 
     close(ws, code, reason) {
       let temporis: any[] = [];
