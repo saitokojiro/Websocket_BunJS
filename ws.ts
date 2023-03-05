@@ -80,11 +80,7 @@ Bun.serve({
       } else {
         return new Response("error", {
           status: 401,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Origin": "http://127.0.0.1:3000"
-          }
+          headers: customHeader
         });
       }
     }
@@ -115,31 +111,19 @@ Bun.serve({
           } else {
             return new Response("error", {
               status: 401,
-              headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Credentials": "true",
-                "Access-Control-Allow-Origin": "http://127.0.0.1:3000"
-              }
+              headers: customHeader
             });
           }
         } else {
           return new Response("error", {
             status: 401,
-            headers: {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Credentials": "true",
-              "Access-Control-Allow-Origin": "http://127.0.0.1:3000"
-            }
+            headers: customHeader
           });
         }
       } else {
         return new Response("cookie empty", {
           status: 401,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Origin": "http://127.0.0.1:3000"
-          }
+          headers: customHeader
         });
       }
     }
@@ -240,7 +224,10 @@ Bun.serve({
         //@ts-ignore
         if (escapeHTML(el.data.user) !== escapeHTML(ws.data.user)) {
           temporis.push(el);
-          temporisUser.push({ user: escapeHTML(el.data.user) });
+          temporisUser.push({ 
+            user: escapeHTML(el.data.user),
+            id_User: escapeHTML(el.data.token)
+          });
         }
       });
       sockets = temporis;
