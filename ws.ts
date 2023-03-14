@@ -1,12 +1,18 @@
-import { ISMessageSend } from "./interfaceWS";
+import { ISMessageSend } from "./interface/interfaceWS";
 import cookieParser from "cookie";
 import { escapeHTML } from "bun";
+import * as jose from 'jose'
+//import publicKey from "./rsakey/RS256.key.pub"
+//import privateKey from "./rsakey/RS256.key"
 
-let msgServer = () => {
+let  msgServer = async() => {
   console.log("Server Info :");
   console.log("Status: running");
-  console.log("Engine: Bun.js 0.5.5");
+  console.log("Engine: Bun.js 0.5.7");
   console.log("Version: 0.0.5");
+  console.log()
+ 
+
 };
 
 /*
@@ -27,13 +33,12 @@ let customHeader: HeadersInit = {
   "Access-Control-Allow-Origin": "http://127.0.0.1:3000"
 };
 
+
 Bun.serve({
   port: 3987,
-
   msgconsole: msgServer(),
-  fetch(req, server) {
+  async fetch(req, server) {
     let url = new URL(req.url);
-
     console.log(url);
     //let token: any = escapeHTML( url.searchParams.get("token"));
     //let token: any = crypto.randomUUID();
@@ -53,6 +58,7 @@ Bun.serve({
 
     if (url.pathname === "/connection" && req.method === "POST") {
       //console.log(req)
+      
       console.log(escapeHTML(url.searchParams.get("user")));
       if (escapeHTML(url.searchParams.get("user")) !== null) {
         let resp = {

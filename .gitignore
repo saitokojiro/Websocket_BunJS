@@ -173,3 +173,5 @@ backup.ts
 index.ts
 _*.ts
 _*.js
+
+rsakey/
