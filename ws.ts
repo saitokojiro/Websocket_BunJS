@@ -3,7 +3,7 @@ import cookieParser from "cookie";
 import { escapeHTML } from "bun";
 import { MongoClient } from "mongodb";
 import * as jose from 'jose'
-import publicKey from "./rsakey/RS256.key.pub"
+//import publicKey from "./rsakey/RS256.key.pub"
 //import privateKey from "./rsakey/RS256.key"
 
 let ipAdress: string = "127.0.0.1"
