@@ -1,19 +1,26 @@
 import { ISMessageSend } from "./interface/interfaceWS";
 import cookieParser from "cookie";
 import { escapeHTML } from "bun";
+import { MongoClient } from "mongodb";
 import * as jose from 'jose'
-//import publicKey from "./rsakey/RS256.key.pub"
+import publicKey from "./rsakey/RS256.key.pub"
 //import privateKey from "./rsakey/RS256.key"
 
-let  msgServer = async() => {
+let ipAdress: string = "127.0.0.1"
+let ServerPort: number = 3987
+
+let msgServer = async () => {
   console.log("Server Info :");
   console.log("Status: running");
   console.log("Engine: Bun.js 0.5.7");
   console.log("Version: 0.0.5");
-  console.log()
- 
+  console.log(`server address: ws://${ipAdress}:${ServerPort}`)
+
 
 };
+let joseGroupe: any = () => {
+  jose.jwtVerify("fdsfds", publicKey)
+}
 
 /*
 let request = (callBack)=> {
@@ -58,7 +65,7 @@ Bun.serve({
 
     if (url.pathname === "/connection" && req.method === "POST") {
       //console.log(req)
-      
+
       console.log(escapeHTML(url.searchParams.get("user")));
       if (escapeHTML(url.searchParams.get("user")) !== null) {
         let resp = {
@@ -136,7 +143,7 @@ Bun.serve({
     if (url.pathname === "/logout" && req.method === "GET") {
       let logoutJson: object = {
         status: "logout",
-        redirect:"/"
+        redirect: "/"
       };
       let res = new Response(JSON.stringify(logoutJson), {
         status: 200,
@@ -230,7 +237,7 @@ Bun.serve({
         //@ts-ignore
         if (escapeHTML(el.data.user) !== escapeHTML(ws.data.user)) {
           temporis.push(el);
-          temporisUser.push({ 
+          temporisUser.push({
             user: escapeHTML(el.data.user),
             id_User: escapeHTML(el.data.token)
           });
