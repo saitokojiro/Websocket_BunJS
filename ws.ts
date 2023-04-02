@@ -33,8 +33,9 @@ let msgServer = async () => {
 
 //let dataKey:string = await publicKey()
 //let dataKeys:string = dataKey
+let jwtkeys = `eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXbVQifQ.eyJzYWl0byI6ImtvamlybyJ9.BkAhH6UM7xFRtA_BcwbOt-_rtWsnbHZmfS-V5Si9JD92ibCD1WBshpJzKlYpj7CaW7EJJpVfLMPPyx8KQo6FcTPzeyTx65u7cdcrG2vhr2NdVsLd2u6O1vKrYttQ0Qrb6Y2JeE8SR44c7MAriwo7bYlP-BS_POzftUIXcrN3KOESQ1Af6TNaEIpGBeuJAxmxZp6kRYfD9nkpQU5Ke3BPXzmjxZT7Pwui-VpbIar351ch-ZvCXGmg8Zyr3ro7EDrrJrzKWVlKNSE7hBVg7dhDERRT3DJq8U3OgOykV9dVyw-oCgTx0tdsvdm7EOMLOWElgRasPkccR3u8YbvcWuY5cba0kFP0Euc0kVhMDl_CWxWQdmpaAyN9UIGLQU9SxKCPB3farTO8qjaPWmJfZ_e3LUuoAz1JOLP61c21NyoEWR12jgCjUu212_aGZ-0T-9KQx6w1MN_cuY1hYpFSKTsDqmyKBfccmug_NWNQ3rG5tn32rFt1dyf381fLMY-rNZ4oaE5qzU4_17UHirDxSPpgjQbkulV87yKklDFRNUXa7pudESOcpQ30XvAf6Dm7tIrK_549DR2n2tLRvH6zRmv-x0LsEw8zOQn6Vm8l1GQvhV_X8Dy4FNwBn1JEqJpU76W6tLTisDW_uvabxVsemXP8uBI_rkbgn4iCMAqsqOPgaDA`
 
-let joseGroupe: any = async () => {
+let joseGroupe: any = async (token:string) => {
   //let testing =  await jose.importSPKI(publicKey, "RS512")
 
   
@@ -47,11 +48,11 @@ let joseGroupe: any = async () => {
 
   const secret = await jose.importSPKI(publicKey256,alg)
 
-  let jwtkeys = `eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXbVQifQ.eyJzYWl0byI6ImtvamlybyJ9.BkAhH6UM7xFRtA_BcwbOt-_rtWsnbHZmfS-V5Si9JD92ibCD1WBshpJzKlYpj7CaW7EJJpVfLMPPyx8KQo6FcTPzeyTx65u7cdcrG2vhr2NdVsLd2u6O1vKrYttQ0Qrb6Y2JeE8SR44c7MAriwo7bYlP-BS_POzftUIXcrN3KOESQ1Af6TNaEIpGBeuJAxmxZp6kRYfD9nkpQU5Ke3BPXzmjxZT7Pwui-VpbIar351ch-ZvCXGmg8Zyr3ro7EDrrJrzKWVlKNSE7hBVg7dhDERRT3DJq8U3OgOykV9dVyw-oCgTx0tdsvdm7EOMLOWElgRasPkccR3u8YbvcWuY5cba0kFP0Euc0kVhMDl_CWxWQdmpaAyN9UIGLQU9SxKCPB3farTO8qjaPWmJfZ_e3LUuoAz1JOLP61c21NyoEWR12jgCjUu212_aGZ-0T-9KQx6w1MN_cuY1hYpFSKTsDqmyKBfccmug_NWNQ3rG5tn32rFt1dyf381fLMY-rNZ4oaE5qzU4_17UHirDxSPpgjQbkulV87yKklDFRNUXa7pudESOcpQ30XvAf6Dm7tIrK_549DR2n2tLRvH6zRmv-x0LsEw8zOQn6Vm8l1GQvhV_X8Dy4FNwBn1JEqJpU76W6tLTisDW_uvabxVsemXP8uBI_rkbgn4iCMAqsqOPgaDA`
+  
 
-  let jwtkey = "ok"
+  //let jwtkey = "ok"
 
-  let { payload, protectedHeader } = await jose.jwtVerify(jwtkey,secret, {
+  let { payload, protectedHeader } = await jose.jwtVerify(token,secret, {
     //issuer: 'urn:example:issuer',
     //audience: 'urn:example:audience',
   })
@@ -63,7 +64,9 @@ let joseGroupe: any = async () => {
 
  
 }
-joseGroupe()
+console.log(process.env.MONGO_DB)
+joseGroupe(jwtkeys)
+
 /*
 let request = (callBack)=> {
   return callBack
