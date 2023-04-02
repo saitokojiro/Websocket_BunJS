@@ -6,12 +6,6 @@ services:
       working_dir: '/src/app/'
       ports:
         - 3987:3987
-          #- 5300:8161  #ui
-          #- 61613:61613 #stomp
-          #- 8860:61614 #ws
-          #- 8850:61616 #jms
-          #- 8840:5672  #AMQP  
-          #- 8830:1883  #MQTT
       volumes:
           - ./:/src/app/
       command: bash -c "bun ws.ts"
