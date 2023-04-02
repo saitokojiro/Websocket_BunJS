@@ -3,25 +3,67 @@ import cookieParser from "cookie";
 import { escapeHTML } from "bun";
 import { MongoClient } from "mongodb";
 import * as jose from 'jose'
-//import publicKey from "./rsakey/RS256.key.pub"
-//import privateKey from "./rsakey/RS256.key"
+import { test } from "bun:test";
+import { publicKey256 , privateKey256 } from "./rsakey/key";
+//import publicKey from "./rsakey/jwtRS512.key.pub"
+//import privateKey from "./rsakey/jwtRS512.key"
 
 let ipAdress: string = "127.0.0.1"
 let ServerPort: number = 3987
 
+
+
+/*
+let publicKey = async ()=>{
+  const foo = Bun.file("./rsakey/jwtRS512.key.pub");
+  return await foo.text()
+}
+*/
 let msgServer = async () => {
   console.log("Server Info :");
   console.log("Status: running");
   console.log("Engine: Bun.js 0.5.7");
   console.log("Version: 0.0.5");
   console.log(`server address: ws://${ipAdress}:${ServerPort}`)
-
+  //console.log(publicKeyString);
+  //console.log(await testing())
+  
 
 };
-let joseGroupe: any = () => {
-  jose.jwtVerify("fdsfds", publicKey)
-}
 
+//let dataKey:string = await publicKey()
+//let dataKeys:string = dataKey
+
+let joseGroupe: any = async () => {
+  //let testing =  await jose.importSPKI(publicKey, "RS512")
+
+  
+
+  //const secret = new TextEncoder().encode(privateKey);
+  
+
+  try {
+    const alg = 'RS256'
+
+  const secret = await jose.importSPKI(publicKey256,alg)
+
+  let jwtkeys = `eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXbVQifQ.eyJzYWl0byI6ImtvamlybyJ9.BkAhH6UM7xFRtA_BcwbOt-_rtWsnbHZmfS-V5Si9JD92ibCD1WBshpJzKlYpj7CaW7EJJpVfLMPPyx8KQo6FcTPzeyTx65u7cdcrG2vhr2NdVsLd2u6O1vKrYttQ0Qrb6Y2JeE8SR44c7MAriwo7bYlP-BS_POzftUIXcrN3KOESQ1Af6TNaEIpGBeuJAxmxZp6kRYfD9nkpQU5Ke3BPXzmjxZT7Pwui-VpbIar351ch-ZvCXGmg8Zyr3ro7EDrrJrzKWVlKNSE7hBVg7dhDERRT3DJq8U3OgOykV9dVyw-oCgTx0tdsvdm7EOMLOWElgRasPkccR3u8YbvcWuY5cba0kFP0Euc0kVhMDl_CWxWQdmpaAyN9UIGLQU9SxKCPB3farTO8qjaPWmJfZ_e3LUuoAz1JOLP61c21NyoEWR12jgCjUu212_aGZ-0T-9KQx6w1MN_cuY1hYpFSKTsDqmyKBfccmug_NWNQ3rG5tn32rFt1dyf381fLMY-rNZ4oaE5qzU4_17UHirDxSPpgjQbkulV87yKklDFRNUXa7pudESOcpQ30XvAf6Dm7tIrK_549DR2n2tLRvH6zRmv-x0LsEw8zOQn6Vm8l1GQvhV_X8Dy4FNwBn1JEqJpU76W6tLTisDW_uvabxVsemXP8uBI_rkbgn4iCMAqsqOPgaDA`
+
+  let jwtkey = "ok"
+
+  let { payload, protectedHeader } = await jose.jwtVerify(jwtkey,secret, {
+    //issuer: 'urn:example:issuer',
+    //audience: 'urn:example:audience',
+  })
+  console.log(payload)
+  console.log(protectedHeader)
+  } catch (error) {
+    console.log("not JWT")
+  }
+
+ 
+}
+joseGroupe()
 /*
 let request = (callBack)=> {
   return callBack
