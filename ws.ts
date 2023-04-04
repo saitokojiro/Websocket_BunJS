@@ -4,21 +4,32 @@ import { escapeHTML } from "bun";
 import { MongoClient } from "mongodb";
 import * as jose from 'jose'
 import { test } from "bun:test";
-import { publicKey256 , privateKey256 } from "./rsakey/key";
-//import publicKey from "./rsakey/jwtRS512.key.pub"
+//import { publicKey256 , privateKey256 } from "./rsakey/key";
+//import publicKey from "./rsakey/jwtRS256.key.pub"
 //import privateKey from "./rsakey/jwtRS512.key"
 
 let ipAdress: string = "127.0.0.1"
 let ServerPort: number = 3987
 
+let method = {
+  "GET": "GET",
+  "POST": "POST",
+}
 
 
-/*
-let publicKey = async ()=>{
-  const foo = Bun.file("./rsakey/jwtRS512.key.pub");
+
+
+
+let publicKey = async () => {
+  const foo = Bun.file("./rsakey/jwtRS256.key.pub");
   return await foo.text()
 }
-*/
+
+let privateKey = async () => {
+  const foo = Bun.file("./rsakey/jwtRS256.key");
+  return await foo.text()
+}
+
 let msgServer = async () => {
   console.log("Server Info :");
   console.log("Status: running");
@@ -27,45 +38,63 @@ let msgServer = async () => {
   console.log(`server address: ws://${ipAdress}:${ServerPort}`)
   //console.log(publicKeyString);
   //console.log(await testing())
-  
+
 
 };
 
-//let dataKey:string = await publicKey()
-//let dataKeys:string = dataKey
-let jwtkeys = `eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXbVQifQ.eyJzYWl0byI6ImtvamlybyJ9.BkAhH6UM7xFRtA_BcwbOt-_rtWsnbHZmfS-V5Si9JD92ibCD1WBshpJzKlYpj7CaW7EJJpVfLMPPyx8KQo6FcTPzeyTx65u7cdcrG2vhr2NdVsLd2u6O1vKrYttQ0Qrb6Y2JeE8SR44c7MAriwo7bYlP-BS_POzftUIXcrN3KOESQ1Af6TNaEIpGBeuJAxmxZp6kRYfD9nkpQU5Ke3BPXzmjxZT7Pwui-VpbIar351ch-ZvCXGmg8Zyr3ro7EDrrJrzKWVlKNSE7hBVg7dhDERRT3DJq8U3OgOykV9dVyw-oCgTx0tdsvdm7EOMLOWElgRasPkccR3u8YbvcWuY5cba0kFP0Euc0kVhMDl_CWxWQdmpaAyN9UIGLQU9SxKCPB3farTO8qjaPWmJfZ_e3LUuoAz1JOLP61c21NyoEWR12jgCjUu212_aGZ-0T-9KQx6w1MN_cuY1hYpFSKTsDqmyKBfccmug_NWNQ3rG5tn32rFt1dyf381fLMY-rNZ4oaE5qzU4_17UHirDxSPpgjQbkulV87yKklDFRNUXa7pudESOcpQ30XvAf6Dm7tIrK_549DR2n2tLRvH6zRmv-x0LsEw8zOQn6Vm8l1GQvhV_X8Dy4FNwBn1JEqJpU76W6tLTisDW_uvabxVsemXP8uBI_rkbgn4iCMAqsqOPgaDA`
+//token test
+let jwtkeys = `eyJhbGciOiJSUzI1NiJ9.eyJ1cm46ZXhhbXBsZTpjbGFpbSI6dHJ1ZSwiaWF0IjoxNjgwNjEwMjIwLCJpc3MiOiJ1cm46ZXhhbXBsZTppc3N1ZXIiLCJhdWQiOiJ1cm46ZXhhbXBsZTphdWRpZW5jZSIsImV4cCI6MTY4MDYxNzQyMH0.JDegji_CWIIU7DnJ0FQsdR8DML6AeYCQ7WaNT4p7lohr-k3ZV21prihTYChdWqz_ZLM2XSbh-lKAdlJE8mliyZPZHzQ1GebaOoRE8zcjQeT3AK7GjS3c0SKyZrfApiiXlPjkho45WzrjYaEf1cAamEPmlTJmUIWiWkRVs8YUbKPoTUqhxb4NoFe1l6HApfkgJ6cJYwVPAp8JEcWpRF9hbm7qHUoLRgeZyjJ1KAFa6IPcQT1CwwcKQhPV45euIORkeB5iRcLSa1wo5US4sXhiwYddjsc-y7n0g5--RFuAa1DTEb61S8GC--CzRCbOqbVLXHF_l9YpexrLkiNEAHDQpw`
+let joseGroupeVerify: any = async (token: string) => {
+  try {
+    const alg = 'RS256'
 
-let joseGroupe: any = async (token:string) => {
-  //let testing =  await jose.importSPKI(publicKey, "RS512")
+    let pubK: string = await publicKey()
+    const secret = await jose.importSPKI(pubK, alg)
 
-  
+    let { payload, protectedHeader } = await jose.jwtVerify(token, secret, {
+      //issuer: 'urn:example:issuer',
+      //audience: 'urn:example:audience',
+    })
+    console.log(payload)
+    console.log(protectedHeader)
+  } catch (error) {
+    console.log("invalid token")
+    //console.log(error)
 
-  //const secret = new TextEncoder().encode(privateKey);
-  
+  }
+
+}
+console.log(process.env.MONGO_DB)
+joseGroupeVerify(jwtkeys)
+
+
+let joseGroupeSign: any = async () => {
+
+
 
   try {
     const alg = 'RS256'
 
-  const secret = await jose.importSPKI(publicKey256,alg)
+    let prK: string = await privateKey()
 
-  
+    const secret = await jose.importPKCS8(prK, alg)
+    const jwt = await new jose.SignJWT({ 'urn:example:claim': true })
+      .setProtectedHeader({ alg })
+      .setIssuedAt()
+      .setIssuer('urn:example:issuer')
+      .setAudience('urn:example:audience')
+      .setExpirationTime('2h')
+      .sign(secret)
 
-  //let jwtkey = "ok"
+    console.log(jwt)
 
-  let { payload, protectedHeader } = await jose.jwtVerify(token,secret, {
-    //issuer: 'urn:example:issuer',
-    //audience: 'urn:example:audience',
-  })
-  console.log(payload)
-  console.log(protectedHeader)
   } catch (error) {
-    console.log("not JWT")
+    console.log(error)
+    console.log("error token")
   }
 
- 
 }
-console.log(process.env.MONGO_DB)
-joseGroupe(jwtkeys)
+joseGroupeSign()
 
 /*
 let request = (callBack)=> {
@@ -107,6 +136,19 @@ Bun.serve({
       });
       return;*/
     //}
+    if (url.pathname === "/testing" && req.method === method.GET) {
+      let resp = {
+        data: {
+          "data": "ok"
+        },
+        response: "method : " + req.method + ' path : ' + url.pathname
+      }
+      let res = new Response(JSON.stringify(resp), {
+        status: 200,
+        headers: customHeader
+      })
+      return res;
+    }
 
     if (url.pathname === "/connection" && req.method === "POST") {
       //console.log(req)
