@@ -68,17 +68,15 @@ console.log(process.env.MONGO_DB)
 joseGroupeVerify(jwtkeys)
 
 
-let joseGroupeSign: any = async () => {
-
-
-
+let joseGroupeSign: any = async (user: jose.JWTPayload) => {
   try {
     const alg = 'RS256'
 
     let prK: string = await privateKey()
 
+    console.log(user)
     const secret = await jose.importPKCS8(prK, alg)
-    const jwt = await new jose.SignJWT({ 'urn:example:claim': true })
+    const jwt = await new jose.SignJWT(user)
       .setProtectedHeader({ alg })
       .setIssuedAt()
       .setIssuer('urn:example:issuer')
@@ -86,7 +84,7 @@ let joseGroupeSign: any = async () => {
       .setExpirationTime('2h')
       .sign(secret)
 
-    console.log(jwt)
+    return jwt
 
   } catch (error) {
     console.log(error)
@@ -94,7 +92,7 @@ let joseGroupeSign: any = async () => {
   }
 
 }
-joseGroupeSign()
+
 
 /*
 let request = (callBack)=> {
@@ -139,7 +137,7 @@ Bun.serve({
     if (url.pathname === "/testing" && req.method === method.GET) {
       let resp = {
         data: {
-          "data": "ok"
+          "data": joseGroupeSign({ "bonjour": "ok" })
         },
         response: "method : " + req.method + ' path : ' + url.pathname
       }
