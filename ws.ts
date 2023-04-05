@@ -84,7 +84,7 @@ let joseGroupeSign: any = async (user: jose.JWTPayload) => {
       .setExpirationTime('2h')
       .sign(secret)
 
-    return jwt
+    return await jwt
 
   } catch (error) {
     console.log(error)
@@ -134,10 +134,12 @@ Bun.serve({
       });
       return;*/
     //}
-    if (url.pathname === "/testing" && req.method === method.GET) {
+    if (url.pathname === "/testing" && req.method === method.POST) {
       let resp = {
         data: {
-          "data": joseGroupeSign({ "bonjour": "ok" })
+          "token": await joseGroupeSign({
+            "user": url.searchParams.get("user"),
+          })
         },
         response: "method : " + req.method + ' path : ' + url.pathname
       }
