@@ -7,6 +7,19 @@ import { test } from "bun:test";
 //import { publicKey256 , privateKey256 } from "./rsakey/key";
 //import publicKey from "./rsakey/jwtRS256.key.pub"
 //import privateKey from "./rsakey/jwtRS512.key"
+console.log(process.env.MONGO_DB)
+
+
+const client = new MongoClient(process.env.MONGO_DB);
+client.connect((err) => {
+  if (err) {
+    console.error('Could not connect to database', err);
+  } else {
+    console.log('Connected to database');
+    // Do something with the database here
+  }
+});
+//console.log(client)
 
 let ipAdress: string = "127.0.0.1"
 let ServerPort: number = 3987
@@ -33,7 +46,7 @@ let privateKey = async () => {
 let msgServer = async () => {
   console.log("Server Info :");
   console.log("Status: running");
-  console.log("Engine: Bun.js 0.5.7");
+  console.log("Engine: Bun.js 0.5.9");
   console.log("Version: 0.0.5");
   console.log(`server address: ws://${ipAdress}:${ServerPort}`)
   //console.log(publicKeyString);
@@ -43,7 +56,6 @@ let msgServer = async () => {
 };
 
 //token test
-let jwtkeys = `eyJhbGciOiJSUzI1NiJ9.eyJ1cm46ZXhhbXBsZTpjbGFpbSI6dHJ1ZSwiaWF0IjoxNjgwNjEwMjIwLCJpc3MiOiJ1cm46ZXhhbXBsZTppc3N1ZXIiLCJhdWQiOiJ1cm46ZXhhbXBsZTphdWRpZW5jZSIsImV4cCI6MTY4MDYxNzQyMH0.JDegji_CWIIU7DnJ0FQsdR8DML6AeYCQ7WaNT4p7lohr-k3ZV21prihTYChdWqz_ZLM2XSbh-lKAdlJE8mliyZPZHzQ1GebaOoRE8zcjQeT3AK7GjS3c0SKyZrfApiiXlPjkho45WzrjYaEf1cAamEPmlTJmUIWiWkRVs8YUbKPoTUqhxb4NoFe1l6HApfkgJ6cJYwVPAp8JEcWpRF9hbm7qHUoLRgeZyjJ1KAFa6IPcQT1CwwcKQhPV45euIORkeB5iRcLSa1wo5US4sXhiwYddjsc-y7n0g5--RFuAa1DTEb61S8GC--CzRCbOqbVLXHF_l9YpexrLkiNEAHDQpw`
 let joseGroupeVerify: any = async (token: string) => {
   try {
     const alg = 'RS256'
@@ -57,6 +69,7 @@ let joseGroupeVerify: any = async (token: string) => {
     })
     console.log(payload)
     console.log(protectedHeader)
+    return { "payload": payload, "protectedHeader": protectedHeader }
   } catch (error) {
     console.log("invalid token")
     //console.log(error)
@@ -64,8 +77,8 @@ let joseGroupeVerify: any = async (token: string) => {
   }
 
 }
-console.log(process.env.MONGO_DB)
-joseGroupeVerify(jwtkeys)
+
+//joseGroupeVerify(jwtkeys)
 
 
 let joseGroupeSign: any = async (user: jose.JWTPayload) => {
@@ -74,14 +87,14 @@ let joseGroupeSign: any = async (user: jose.JWTPayload) => {
 
     let prK: string = await privateKey()
 
-    console.log(user)
+    //console.log(user)
     const secret = await jose.importPKCS8(prK, alg)
     const jwt = await new jose.SignJWT(user)
       .setProtectedHeader({ alg })
-      .setIssuedAt()
-      .setIssuer('urn:example:issuer')
-      .setAudience('urn:example:audience')
-      .setExpirationTime('2h')
+      //.setIssuedAt()
+      //.setIssuer('urn:example:issuer')
+      //.setAudience('urn:example:audience')
+      //.setExpirationTime('2h')
       .sign(secret)
 
     return await jwt
@@ -118,27 +131,13 @@ Bun.serve({
   msgconsole: msgServer(),
   async fetch(req, server) {
     let url = new URL(req.url);
-    console.log(url);
-    //let token: any = escapeHTML( url.searchParams.get("token"));
-    //let token: any = crypto.randomUUID();
-    //let user: any =  escapeHTML(url.searchParams.get("users"));
-    //if (token !== null && user !== null && token !== "null" && user !== "null" ) {
-    /*    server.upgrade(req, {
-        data: {
-          _logger: true,
-          token:  token,
-          user: user,
-          room: room,
-          counter: counter
-        }
-      });
-      return;*/
-    //}
-    if (url.pathname === "/testing" && req.method === method.POST) {
+    if (url.pathname === "/createtoken" && req.method === method.POST) {
       let resp = {
         data: {
           "token": await joseGroupeSign({
+            "id": url.searchParams.get("id"),
             "user": url.searchParams.get("user"),
+            //"password": url.searchParams.get("password"),
           })
         },
         response: "method : " + req.method + ' path : ' + url.pathname
@@ -149,11 +148,28 @@ Bun.serve({
       })
       return res;
     }
+    if (url.pathname === "/testConnect" && req.method === method.GET) {
+      let checking = await joseGroupeVerify(url.searchParams.get("token"))
+      //console.log(checking)
+      let resp = {
+        "data": {
+          "is_valid": false,
+          "payload": checking.payload,
+          "hash": checking.protectedHeader,
+          "status": "waiting"
+
+        }
+      }
+      let res = new Response(JSON.stringify(resp), {
+        status: 200,
+      })
+      return res
+    }
 
     if (url.pathname === "/connection" && req.method === "POST") {
       //console.log(req)
 
-      console.log(escapeHTML(url.searchParams.get("user")));
+      //console.log(escapeHTML(url.searchParams.get("user")));
       if (escapeHTML(url.searchParams.get("user")) !== null) {
         let resp = {
           data: {
@@ -189,11 +205,11 @@ Bun.serve({
       //console.log(req)
       if (req.headers.get("cookie") !== null) {
         console.log("------------");
-        console.log(req.headers.get("cookie"));
+        //console.log(req.headers.get("cookie"));
         let cookieClient = cookieParser.parse(req.headers.get("cookie"));
 
         let userParams = escapeHTML(url.searchParams.get("user"));
-        console.log(userParams);
+        // console.log(userParams);
         if (cookieClient.id_User !== undefined && cookieClient.CSRF_TOKEN !== undefined && userParams !== undefined) {
           if (cookieClient.id_User !== null && cookieClient.CSRF_TOKEN !== null && userParams !== null) {
             console.log("ok");
