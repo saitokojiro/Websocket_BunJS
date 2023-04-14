@@ -11,15 +11,12 @@ console.log(process.env.MONGO_DB)
 
 
 const client = new MongoClient(process.env.MONGO_DB);
-client.connect((err) => {
-  if (err) {
-    console.error('Could not connect to database', err);
-  } else {
-    console.log('Connected to database');
-    // Do something with the database here
-  }
-});
-//console.log(client)
+await client.connect()
+
+const db = client.db("message");
+//const result = await collection.findOne({ hello: "world" });
+
+//console.log(result);
 
 let ipAdress: string = "127.0.0.1"
 let ServerPort: number = 3987
@@ -243,6 +240,18 @@ Bun.serve({
         });
       }
     }
+    if (url.pathname === "/admin") {
+      server.upgrade(req, {
+        data: {
+          _logger: true,
+          token: "45683233",
+          user: "admin",
+          room: room,
+          counter: counter
+        }
+      });
+      return;
+    }
     if (url.pathname === "/logout" && req.method === "GET") {
       let logoutJson: object = {
         status: "logout",
@@ -327,6 +336,17 @@ Bun.serve({
               media: escapeHTML(messageJson.media),
               date: escapeHTML(messageJson.date)
             };
+
+            (async () => {
+              const collection = db.collection(escapeHTML(messageJson.from));
+              await collection.insertOne({
+                "message_id": escapeHTML(messageJson.id),
+                "to": escapeHTML(messageJson.to),
+                "from": escapeHTML(messageJson.from),
+                "message": escapeHTML(messageJson.message)
+              });
+            })
+
             el.send(JSON.stringify(sendMessage));
           }
         });
