@@ -11,7 +11,14 @@ console.log(process.env.MONGO_DB)
 
 
 const client = new MongoClient(process.env.MONGO_DB);
-await client.connect()
+//const client = new MongoClient("mongodb://saitoKo:pass@mongo:27017/?useUnifiedTopology=true");
+try {
+  await client.connect()
+} catch (error) {
+  console.log(error)
+}
+
+
 
 const db = client.db("message");
 //const result = await collection.findOne({ hello: "world" });
@@ -26,6 +33,46 @@ let method = {
   "POST": "POST",
 }
 
+let mongoPush = async (messageJson: ISMessageSend) => {
+  const collection = db.collection(escapeHTML(messageJson.to));
+  await collection.insertOne({
+    id: escapeHTML(messageJson.id),
+    type: escapeHTML(messageJson.type),
+    to: escapeHTML(messageJson.to),
+    sender: escapeHTML(messageJson.sender),
+    message: escapeHTML(messageJson.message),
+    isMedia: messageJson.isMedia,
+    typeMedia: escapeHTML(messageJson.typeMedia),
+    media: escapeHTML(messageJson.media),
+    date: escapeHTML(messageJson.date)
+  });
+
+}
+
+let mongoGet = async () => {
+
+}
+
+let mongoGetAll = async () => {
+
+}
+
+let mongoGetById = async () => {
+
+}
+
+let mongoDelete = async () => {
+
+}
+
+
+let MongoCustom = {
+  "push": mongoPush,
+  "get": mongoGet,
+  "getAll": mongoGetAll,
+  "getById": mongoGetById,
+  "delete": mongoDelete,
+}
 
 
 
@@ -326,26 +373,34 @@ Bun.serve({
           if (el.data.token == messageJson.to) {
             //@ts-ignore
             let sendMessage: ISMessageSend = {
+              id: escapeHTML(messageJson.id),
               type: escapeHTML(messageJson.type),
               to: escapeHTML(messageJson.to),
-              from: escapeHTML(messageJson.from),
+              sender: escapeHTML(messageJson.sender),
               message: escapeHTML(messageJson.message),
-              id: escapeHTML(messageJson.id),
               isMedia: messageJson.isMedia,
               typeMedia: escapeHTML(messageJson.typeMedia),
               media: escapeHTML(messageJson.media),
               date: escapeHTML(messageJson.date)
             };
+            /*
+                        let data = async () => {
+                          console.log("ok")
+                          console.log(messageJson)
+                          const collection = db.collection(escapeHTML(messageJson.to));
+                          await collection.insertOne({
+                            "message_id": escapeHTML(messageJson.id),
+                            "to": escapeHTML(messageJson.to),
+                            "from": escapeHTML(messageJson.sender),
+                            "message": escapeHTML(messageJson.message),
+                            "send_at": escapeHTML(messageJson.date)
+                          });
+                        }
+            
+                        data();*/
 
-            (async () => {
-              const collection = db.collection(escapeHTML(messageJson.from));
-              await collection.insertOne({
-                "message_id": escapeHTML(messageJson.id),
-                "to": escapeHTML(messageJson.to),
-                "from": escapeHTML(messageJson.from),
-                "message": escapeHTML(messageJson.message)
-              });
-            })
+            MongoCustom.push(sendMessage)
+
 
             el.send(JSON.stringify(sendMessage));
           }

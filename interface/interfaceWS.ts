@@ -1,8 +1,8 @@
 export interface ISMessageSend {
+  id: any;
   type: string;
   to: string;
-  from: string;
-  id: any;
+  sender: string;
   message: string;
   isMedia: boolean;
   typeMedia: string;
