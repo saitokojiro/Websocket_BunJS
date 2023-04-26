@@ -53,8 +53,20 @@ let mongoGet = async () => {
 
 }
 
-let mongoGetAll = async () => {
+let mongoGetAll = async (id_user_one: string, id_user_two: string) => {
+  const collections = await db.listCollections().toArray();
 
+  const collection_userOne = collections.find(c => c.name === id_user_one + "/" + id_user_two);
+  const collection_userTwo = collections.find(c => c.name === id_user_two + "/" + id_user_one);
+
+  if (collection_userOne) {
+    console.log("exist")
+  } else if (collection_userTwo) {
+    console.log("variant exist")
+  } else {
+    console.log("not exist")
+  }
+  //const collection = db.collection(escapeHTML(messageJson.to));
 }
 
 let mongoGetById = async () => {
@@ -363,7 +375,7 @@ Bun.serve({
       counter++;
     },
 
-    message(ws, message) {
+    message(_ws, message) {
       //@ts-ignore
       let messageJson = JSON.parse(message);
 
@@ -408,7 +420,7 @@ Bun.serve({
       }
     },
 
-    close(ws, code, reason) {
+    close(ws, _code, _reason) {
       let temporis: any[] = [];
       let temporisUser: any[] = [];
       sockets.some((el) => {
