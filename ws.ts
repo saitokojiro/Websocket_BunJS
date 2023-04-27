@@ -33,8 +33,28 @@ let method = {
   "POST": "POST",
 }
 
+
+let mongoVerificationCollectionExist = async (id_user_one: string, id_user_two: string) => {
+  const collections = await db.listCollections().toArray();
+
+  const collection_userOne = collections.find(c => c.name === id_user_one + "/" + id_user_two);
+  const collection_userTwo = collections.find(c => c.name === id_user_two + "/" + id_user_one);
+
+  if (collection_userOne) {
+    return id_user_one + "/" + id_user_two
+  } else if (collection_userTwo) {
+    return id_user_two + "/" + id_user_one
+  } else {
+    return id_user_one + "/" + id_user_two
+  }
+  //const collection = db.collection(escapeHTML(messageJson.to));
+}
+
 let mongoPush = async (messageJson: ISMessageSend) => {
-  const collection = db.collection(escapeHTML(messageJson.to));
+  let verification = await mongoVerificationCollectionExist(messageJson.to, messageJson.sender)
+  //const collection = db.collection(escapeHTML(messageJson.to + "/" + messageJson.sender));
+  console.log(verification)
+  const collection = db.collection(escapeHTML(verification));
   await collection.insertOne({
     id: escapeHTML(messageJson.id),
     type: escapeHTML(messageJson.type),
@@ -54,19 +74,7 @@ let mongoGet = async () => {
 }
 
 let mongoGetAll = async (id_user_one: string, id_user_two: string) => {
-  const collections = await db.listCollections().toArray();
 
-  const collection_userOne = collections.find(c => c.name === id_user_one + "/" + id_user_two);
-  const collection_userTwo = collections.find(c => c.name === id_user_two + "/" + id_user_one);
-
-  if (collection_userOne) {
-    console.log("exist")
-  } else if (collection_userTwo) {
-    console.log("variant exist")
-  } else {
-    console.log("not exist")
-  }
-  //const collection = db.collection(escapeHTML(messageJson.to));
 }
 
 let mongoGetById = async () => {
@@ -382,6 +390,8 @@ Bun.serve({
       if (messageJson.type == "private message") {
         sockets.some((el) => {
           console.log(messageJson.to);
+          console.log(messageJson.sender);
+          console.log(messageJson);
           if (el.data.token == messageJson.to) {
             //@ts-ignore
             let sendMessage: ISMessageSend = {

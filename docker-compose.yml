@@ -3,7 +3,6 @@ services:
   bunworker:
     image: oven/bun
     container_name: bunworker
-    restart: always
     working_dir: '/src/app/'
     ports:
       - 3987:3987
