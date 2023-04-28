@@ -2,14 +2,21 @@ import { ISMessageSend } from "./interface/interfaceWS";
 import cookieParser from "cookie";
 import { escapeHTML } from "bun";
 import { MongoClient } from "mongodb";
+import { MongoCustom } from "./function/mongoCustom"
 import * as jose from 'jose'
 import { test } from "bun:test";
 //import { publicKey256 , privateKey256 } from "./rsakey/key";
 //import publicKey from "./rsakey/jwtRS256.key.pub"
 //import privateKey from "./rsakey/jwtRS512.key"
-console.log(process.env.MONGO_DB)
+//console.log(process.env.MONGO_DB)
 
+let mongoCustom = MongoCustom("message");
 
+//let dataMongo = await mongoCustom.getAll("2c33577d-a026-4cdb-46ca-159b6e099b97", "a22a56a2-552b-c9b2-6e70-32463ffd1699");
+//console.log(dataMongo);
+//mongoCustom
+
+/*
 const client = new MongoClient(process.env.MONGO_DB);
 //const client = new MongoClient("mongodb://saitoKo:pass@mongo:27017/?useUnifiedTopology=true");
 try {
@@ -20,7 +27,7 @@ try {
 
 
 
-const db = client.db("message");
+const db = client.db("message");*/
 //const result = await collection.findOne({ hello: "world" });
 
 //console.log(result);
@@ -32,7 +39,7 @@ let method = {
   "GET": "GET",
   "POST": "POST",
 }
-
+/*
 
 let mongoVerificationCollectionExist = async (id_user_one: string, id_user_two: string) => {
   const collections = await db.listCollections().toArray();
@@ -49,42 +56,9 @@ let mongoVerificationCollectionExist = async (id_user_one: string, id_user_two: 
   }
   //const collection = db.collection(escapeHTML(messageJson.to));
 }
+*/
 
-let mongoPush = async (messageJson: ISMessageSend) => {
-  let verification = await mongoVerificationCollectionExist(messageJson.to, messageJson.sender)
-  //const collection = db.collection(escapeHTML(messageJson.to + "/" + messageJson.sender));
-  console.log(verification)
-  const collection = db.collection(escapeHTML(verification));
-  await collection.insertOne({
-    id: escapeHTML(messageJson.id),
-    type: escapeHTML(messageJson.type),
-    to: escapeHTML(messageJson.to),
-    sender: escapeHTML(messageJson.sender),
-    message: escapeHTML(messageJson.message),
-    isMedia: messageJson.isMedia,
-    typeMedia: escapeHTML(messageJson.typeMedia),
-    media: escapeHTML(messageJson.media),
-    date: escapeHTML(messageJson.date)
-  });
-
-}
-
-let mongoGet = async () => {
-
-}
-
-let mongoGetAll = async (id_user_one: string, id_user_two: string) => {
-
-}
-
-let mongoGetById = async () => {
-
-}
-
-let mongoDelete = async () => {
-
-}
-
+/*
 
 let MongoCustom = {
   "push": mongoPush,
@@ -93,8 +67,51 @@ let MongoCustom = {
   "getById": mongoGetById,
   "delete": mongoDelete,
 }
-
-
+*/
+/*
+let MongoCustom = (()=>{
+  let mongoPush = async (messageJson: ISMessageSend) => {
+    let verification = await mongoVerificationCollectionExist(messageJson.to, messageJson.sender)
+    //const collection = db.collection(escapeHTML(messageJson.to + "/" + messageJson.sender));
+    console.log(verification)
+    const collection = db.collection(escapeHTML(verification));
+    await collection.insertOne({
+      id: escapeHTML(messageJson.id),
+      type: escapeHTML(messageJson.type),
+      to: escapeHTML(messageJson.to),
+      sender: escapeHTML(messageJson.sender),
+      message: escapeHTML(messageJson.message),
+      isMedia: messageJson.isMedia,
+      typeMedia: escapeHTML(messageJson.typeMedia),
+      media: escapeHTML(messageJson.media),
+      date: escapeHTML(messageJson.date)
+    });
+  
+  }
+  
+  let mongoGet = async () => {
+  
+  }
+  
+  let mongoGetAll = async (id_user_one: string, id_user_two: string) => {
+  
+  }
+  
+  let mongoGetById = async () => {
+  
+  }
+  
+  let mongoDelete = async () => {
+  
+  }
+  return function() {
+    return {
+      push: mongoPush,
+      //update: mongoUpdate,
+      //delete: mongoDelete
+    };
+  };
+})()*/
 
 
 let publicKey = async () => {
@@ -421,7 +438,7 @@ Bun.serve({
             
                         data();*/
 
-            MongoCustom.push(sendMessage)
+            mongoCustom.push(sendMessage)
 
 
             el.send(JSON.stringify(sendMessage));
