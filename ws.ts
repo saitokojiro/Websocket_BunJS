@@ -10,10 +10,16 @@ import { test } from "bun:test";
 //import privateKey from "./rsakey/jwtRS512.key"
 //console.log(process.env.MONGO_DB)
 
-let mongoCustom = MongoCustom("message");
+let mongoCustom = await MongoCustom("message");
 
-//let dataMongo = await mongoCustom.getAll("2c33577d-a026-4cdb-46ca-159b6e099b97", "a22a56a2-552b-c9b2-6e70-32463ffd1699");
-//console.log(dataMongo);
+
+
+
+
+//let dataMongo = await mongoCustom.getAll("48d952af-04b2-5251-96a1-0521ecd2035d", "48d952af-04b2-5251-96a1-0521ecd2035d");
+/*
+let testFunction = await mongoCustom.GetByOne("48d952af-04b2-5251-96a1-0521ecd2035d", "48d952af-04b2-5251-96a1-0521ecd2035d", { "message": "lorem ipstum" });
+console.log(testFunction);*/
 //mongoCustom
 
 /*
@@ -115,13 +121,18 @@ let MongoCustom = (()=>{
 
 
 let publicKey = async () => {
-  const foo = Bun.file("./rsakey/jwtRS256.key.pub");
+  const foo = Bun.file("./rsakey/public_key.pem");
   return await foo.text()
 }
 
 let privateKey = async () => {
-  const foo = Bun.file("./rsakey/jwtRS256.key");
-  return await foo.text()
+  try {
+    const foo = Bun.file("./rsakey/private_key_pkcs8.pem");
+    return await foo.text()
+  } catch (error) {
+    console.log(error)
+  }
+
 }
 
 let msgServer = async () => {
@@ -148,11 +159,12 @@ let joseGroupeVerify: any = async (token: string) => {
       //issuer: 'urn:example:issuer',
       //audience: 'urn:example:audience',
     })
-    console.log(payload)
-    console.log(protectedHeader)
-    return { "payload": payload, "protectedHeader": protectedHeader }
+    //console.log(payload)
+    //console.log(protectedHeader)
+    return { "payload": payload, "protectedHeader": protectedHeader, "status": true }
   } catch (error) {
     console.log("invalid token")
+    return { "payload": "", "protectedHeader": "", "response": "invalid token", "status": false }
     //console.log(error)
 
   }
@@ -164,20 +176,23 @@ let joseGroupeVerify: any = async (token: string) => {
 
 let joseGroupeSign: any = async (user: jose.JWTPayload) => {
   try {
-    const alg = 'RS256'
+    const alg: string = 'RS256'
 
     let prK: string = await privateKey()
 
+    //console.log(prK)
     //console.log(user)
     const secret = await jose.importPKCS8(prK, alg)
+
     const jwt = await new jose.SignJWT(user)
       .setProtectedHeader({ alg })
-      //.setIssuedAt()
-      //.setIssuer('urn:example:issuer')
-      //.setAudience('urn:example:audience')
-      //.setExpirationTime('2h')
+      .setIssuedAt()
+      .setIssuer('urn:example:issuer')
+      .setAudience('urn:example:audience')
+      .setExpirationTime('2h')
       .sign(secret)
 
+    //console.log(jwt)
     return await jwt
 
   } catch (error) {
@@ -187,6 +202,8 @@ let joseGroupeSign: any = async (user: jose.JWTPayload) => {
 
 }
 
+
+//joseGroupeSign({test:"data"})
 
 /*
 let request = (callBack)=> {
@@ -212,6 +229,56 @@ Bun.serve({
   msgconsole: msgServer(),
   async fetch(req, server) {
     let url = new URL(req.url);
+
+
+    if (url.pathname === "/getMessageUser" && req.method === method.GET) {
+
+
+
+      if (req.headers.get("cookie") !== null) {
+        // console.log("------------");
+        let cookieClient = cookieParser.parse(req.headers.get("cookie"));
+        let userParams = escapeHTML(url.searchParams.get("user"));
+        if (cookieClient.id_User !== undefined && cookieClient.token !== undefined && cookieClient.CSRF_TOKEN !== undefined && userParams !== undefined) {
+          if (cookieClient.id_User !== null && cookieClient.CSRF_TOKEN !== null && userParams !== null && cookieClient.token !== null) {
+            let tokenverify = await joseGroupeVerify(cookieClient.token);
+            //   console.log(tokenverify)
+            if (tokenverify.status !== null) {
+
+              //console.log(escapeHTML(url.searchParams.get("iduserto")))
+              //console.log(tokenverify.payload.id)
+              //console.log(url.searchParams.get("iduserto"))
+              //console.log( await mongoCustom.getAll(tokenverify.payload.id, url.searchParams.get("iduserto")))
+
+              let resp = {
+                data: {
+                  listMsg: await mongoCustom.getAll(tokenverify.payload.id, url.searchParams.get("iduserto"))
+                }
+              }
+              let res = new Response(JSON.stringify(resp), {
+                status: 200,
+                headers: customHeader
+              })
+
+              return res;
+            } else {
+              let res = new Response("invalid token", {
+                status: 401,
+                headers: customHeader
+              })
+
+              return res;
+            }
+
+          }
+        }
+      }
+
+
+
+    }
+
+    /* create Token */
     if (url.pathname === "/createtoken" && req.method === method.POST) {
       let resp = {
         data: {
@@ -219,7 +286,11 @@ Bun.serve({
             "id": url.searchParams.get("id"),
             "user": url.searchParams.get("user"),
             //"password": url.searchParams.get("password"),
-          })
+          }),
+          data: {
+            "id": url.searchParams.get("id"),
+            "user": url.searchParams.get("user")
+          }
         },
         response: "method : " + req.method + ' path : ' + url.pathname
       }
@@ -229,14 +300,17 @@ Bun.serve({
       })
       return res;
     }
+    /* verify Token */
     if (url.pathname === "/testConnect" && req.method === method.GET) {
       let checking = await joseGroupeVerify(url.searchParams.get("token"))
-      //console.log(checking)
+      console.log("checking")
+      console.log(checking)
+      console.log("checking")
       let resp = {
         "data": {
           "is_valid": false,
-          "payload": checking.payload,
-          "hash": checking.protectedHeader,
+          "payload": checking?.payload,
+          "hash": checking?.protectedHeader,
           "status": "waiting"
 
         }
@@ -252,10 +326,16 @@ Bun.serve({
 
       //console.log(escapeHTML(url.searchParams.get("user")));
       if (escapeHTML(url.searchParams.get("user")) !== null) {
+        let rndCrypto = crypto.randomUUID();
         let resp = {
           data: {
+            token: await joseGroupeSign({
+              "id": rndCrypto,
+              "user": url.searchParams.get("user"),
+              //"password": url.searchParams.get("password"),
+            }),
             User: escapeHTML(url.searchParams.get("user")),
-            id: crypto.randomUUID()
+            id: rndCrypto
           },
           response: "method " + req.method + " path : " + url.pathname
         };
@@ -271,7 +351,7 @@ Bun.serve({
           }*/
         });
         res.headers.append("Set-Cookie", "id_User=" + resp.data.id + "; HttpOnly; SameSite=None; Secure");
-        res.headers.append("Set-Cookie", "token=" + resp.data.id + "; HttpOnly; SameSite=None; Secure");
+        res.headers.append("Set-Cookie", "token=" + resp.data.token + "; HttpOnly; SameSite=None; Secure");
         res.headers.append("Set-Cookie", "CSRF_TOKEN=" + crypto.randomUUID() + "; HttpOnly; SameSite=None; Secure");
         return res;
       } else {
@@ -291,20 +371,32 @@ Bun.serve({
 
         let userParams = escapeHTML(url.searchParams.get("user"));
         // console.log(userParams);
-        if (cookieClient.id_User !== undefined && cookieClient.CSRF_TOKEN !== undefined && userParams !== undefined) {
-          if (cookieClient.id_User !== null && cookieClient.CSRF_TOKEN !== null && userParams !== null) {
+        if (cookieClient.id_User !== undefined && cookieClient.token !== undefined && cookieClient.CSRF_TOKEN !== undefined && userParams !== undefined) {
+          if (cookieClient.id_User !== null && cookieClient.CSRF_TOKEN !== null && userParams !== null && cookieClient.token !== null) {
             console.log("ok");
-            server.upgrade(req, {
-              data: {
-                _logger: true,
-                token: cookieClient.id_User,
-                CSRF_TOKEN: cookieClient.CSRF_TOKEN,
-                user: userParams,
-                room: room,
-                counter: counter
-              }
-            });
-            return;
+            let verificationJWT = await joseGroupeVerify(cookieClient.token)
+            if (verificationJWT.status !== false) {
+              server.upgrade(req, {
+                data: {
+                  _logger: true,
+                  id_User: cookieClient.id_User,
+                  token: cookieClient.token,
+                  CSRF_TOKEN: cookieClient.CSRF_TOKEN,
+                  user: userParams,
+                  room: room,
+                  counter: counter
+                }
+              });
+              return;
+            } else {
+              console.log(verificationJWT.status)
+              return new Response("error", {
+
+                status: 401,
+                headers: customHeader
+              });
+            }
+
           } else {
             return new Response("error", {
               status: 401,
@@ -381,7 +473,8 @@ Bun.serve({
       let messageAll = { all: "welcome " + escapeHTML(ws.data.user) };
       userData.push({
         user: escapeHTML(ws.data.user),
-        id_User: escapeHTML(ws.data.token)
+        id_User: escapeHTML(ws.data.id_User),
+        token: escapeHTML(ws.data.token)
       });
       //console.log(ws.data);
       let listUserData = { cat: "userlist", list: userData };
@@ -393,19 +486,20 @@ Bun.serve({
       ws.send(JSON.stringify({ token: escapeHTML(ws.data.token) }));
 
       sockets.some((el) => {
-        console.log(el.data.token);
-        console.log(el.data.user);
+        //console.log(el.data.token);
+        //console.log(el.data.user);
       });
 
       counter++;
     },
 
-    message(_ws, message) {
+    async message(_ws, message) {
       //@ts-ignore
+      
       let messageJson = JSON.parse(message);
-
+      mongoCustom.push(messageJson);
       if (messageJson.type == "private message") {
-        sockets.some((el) => {
+         sockets.some(async (el) => {
           console.log(messageJson.to);
           console.log(messageJson.sender);
           console.log(messageJson);
@@ -422,24 +516,6 @@ Bun.serve({
               media: escapeHTML(messageJson.media),
               date: escapeHTML(messageJson.date)
             };
-            /*
-                        let data = async () => {
-                          console.log("ok")
-                          console.log(messageJson)
-                          const collection = db.collection(escapeHTML(messageJson.to));
-                          await collection.insertOne({
-                            "message_id": escapeHTML(messageJson.id),
-                            "to": escapeHTML(messageJson.to),
-                            "from": escapeHTML(messageJson.sender),
-                            "message": escapeHTML(messageJson.message),
-                            "send_at": escapeHTML(messageJson.date)
-                          });
-                        }
-            
-                        data();*/
-
-            mongoCustom.push(sendMessage)
-
 
             el.send(JSON.stringify(sendMessage));
           }
