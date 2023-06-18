@@ -1,4 +1,4 @@
-import { ISMessageSend } from "./interface/interfaceWS";
+import { ISAccountSend, ISMessageSend } from "./interface/interfaceWS";
 import cookieParser from "cookie";
 import { escapeHTML } from "bun";
 import { MongoClient } from "mongodb";
@@ -132,13 +132,14 @@ let privateKey = async () => {
   } catch (error) {
     console.log(error)
   }
-
 }
+
+
 
 let msgServer = async () => {
   console.log("Server Info :");
   console.log("Status: running");
-  console.log("Engine: Bun.js 0.5.9");
+  console.log("Engine: Bun.js 0.6.9");
   console.log("Version: 0.0.5");
   console.log(`server address: ws://${ipAdress}:${ServerPort}`)
   //console.log(publicKeyString);
@@ -327,19 +328,33 @@ Bun.serve({
       //console.log(escapeHTML(url.searchParams.get("user")));
       if (escapeHTML(url.searchParams.get("user")) !== null) {
         let rndCrypto = crypto.randomUUID();
+        let dataConnection = {
+        token: await joseGroupeSign({
+          "id": rndCrypto,
+          "user": url.searchParams.get("user"),
+          //"password": url.searchParams.get("password"),
+        }),
+        user: escapeHTML(url.searchParams.get("user")),
+        id: rndCrypto
+      }
         let resp = {
-          data: {
-            token: await joseGroupeSign({
-              "id": rndCrypto,
-              "user": url.searchParams.get("user"),
-              //"password": url.searchParams.get("password"),
-            }),
-            User: escapeHTML(url.searchParams.get("user")),
-            id: rndCrypto
-          },
+          data: dataConnection,
           response: "method " + req.method + " path : " + url.pathname
         };
 
+
+
+        let SaveAccountDb: ISAccountSend = {
+          id: dataConnection.id,
+          user:dataConnection.user,
+          create_At: new Date(),
+          enable:true
+        }
+        mongoCustom.pushAny("account", SaveAccountDb)
+
+
+
+        
         let res = new Response(JSON.stringify(resp), {
           status: 200,
           headers: customHeader

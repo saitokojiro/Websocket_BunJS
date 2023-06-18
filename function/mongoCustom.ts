@@ -1,6 +1,6 @@
 import { MongoClient } from "mongodb";
 import { escapeHTML } from "bun";
-import { ISMessageSend } from "../interface/interfaceWS";
+import { ISAccountSend, ISMessageSend } from "../interface/interfaceWS";
 
 
 const client = new MongoClient(process.env.MONGO_DB);
@@ -31,6 +31,18 @@ mongoCustom.configNameDatabase()
 
 export let MongoCustom = ((param: string) => {
     let db = client.db(param);
+
+    let mongoVerificationCollectionUser = async (typeC : string)=>{
+        const collections = await db.listCollections().toArray();
+        const collection_type = collections.find(c=> c.name === typeC);
+        if(collection_type){
+            return collection_type
+        }else{
+            return typeC
+        }
+        
+
+    }
     let mongoVerificationCollectionExist = async (id_user_one: string, id_user_two: string) => {
         const collections = await db.listCollections().toArray();
 
@@ -45,6 +57,12 @@ export let MongoCustom = ((param: string) => {
             return id_user_one + "/" + id_user_two
         }
 
+    }
+
+    let mongoAnyPush = async (type: any, anyJson: Object) => {        
+        let verification = await mongoVerificationCollectionUser(type)
+        const collection = db.collection(escapeHTML(verification));
+        await collection.insertOne(anyJson); 
     }
 
     let mongoPush = async (messageJson: ISMessageSend) => {        
@@ -117,6 +135,7 @@ export let MongoCustom = ((param: string) => {
     }
 
     return {
+        pushAny:  mongoAnyPush,
         push:  mongoPush,
         getAll: mongoGetAll,
         GetBy: mongoGetBy,
