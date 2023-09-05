@@ -3,13 +3,17 @@ import { method, customHeader } from "./../global"
 import { MongoCustom } from "../../function/mongoCustom";
 import cookieParser from "cookie";
 import { escapeHTML } from "bun";
+import { ISAccountSend, ISMessageSend } from "../../interface/interfaceWS";
+
 
 let mongoCustom = await MongoCustom("message");
+
 
 export let PostRequest = async (req, server, counter, sockets, room, userData) => {
     let url = new URL(req.url);
 
     /* create Token */
+    //Post 
     if (url.pathname === "/createtoken" && req.method === method.POST) {
         let resp = {
             data: {
@@ -32,6 +36,7 @@ export let PostRequest = async (req, server, counter, sockets, room, userData) =
         return res;
     }
 
+    // Post Connection 
     if (url.pathname === "/connection" && req.method === "POST") {
         //console.log(req)
 
@@ -54,6 +59,7 @@ export let PostRequest = async (req, server, counter, sockets, room, userData) =
 
             let SaveAccountDb: ISAccountSend = {
                 id: dataConnection.id,
+                password: crypto.randomUUID(),
                 user: dataConnection.user,
                 create_At: new Date(),
                 enable: true,
@@ -91,5 +97,30 @@ export let PostRequest = async (req, server, counter, sockets, room, userData) =
                 headers: customHeader,
             });
         }
+    }
+
+    // creation de compte 
+    if (url.pathname === "/newAccount" && req.method === method.POST) {
+        let user = url.searchParams.get("user")
+        let password = url.searchParams.get("password")
+
+        let SaveAccountDb: ISAccountSend = {
+            id: crypto.randomUUID(),
+            user: user,
+            password: await Bun.password.hash(password),
+            create_At: new Date(),
+            enable: true,
+        };
+        mongoCustom.pushAny("acc", SaveAccountDb, false)
+        let resp = {
+            data: "",
+            response: "method " + req.method + " path : " + url.pathname,
+        };
+        let res = new Response(JSON.stringify(resp), {
+            status: 200,
+            headers: customHeader,
+        })
+        return res
+
     }
 };

@@ -1,6 +1,8 @@
+
 export interface ISAccountSend {
   id: string,
   user: string,
+  password: string
   create_At: Date,
   enable: boolean,
 }

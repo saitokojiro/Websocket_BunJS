@@ -6,8 +6,10 @@ import { escapeHTML } from "bun";
 
 let mongoCustom = await MongoCustom("message");
 
-export let GetRequest = async (req, server) => {
+export let GetRequest = async (req, server, counter, sockets, room, userData) => {
     let url = new URL(req.url);
+
+    // Get user Message 
     if (url.pathname === "/getMessageUser" && req.method === method.GET) {
         if (req.headers.get("cookie") !== null) {
             // console.log("------------");
@@ -80,6 +82,7 @@ export let GetRequest = async (req, server) => {
         return res;
     }
 
+    // Get Connection
     if (url.pathname === "/connection" && req.method === "GET") {
         //console.log(req)
         if (req.headers.get("cookie") !== null) {
@@ -142,6 +145,12 @@ export let GetRequest = async (req, server) => {
             });
         }
     }
+
+    if (url.pathname === "/testAccount" && req.method === method.GET) {
+        //need code
+    }
+
+    // LogOut
     if (url.pathname === "/logout" && req.method === "GET") {
         let logoutJson: object = {
             status: "logout",
