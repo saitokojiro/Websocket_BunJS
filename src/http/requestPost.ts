@@ -6,7 +6,7 @@ import { escapeHTML } from "bun";
 
 let mongoCustom = await MongoCustom("message");
 
-export let PostRequest = async (req, server) => {
+export let PostRequest = async (req, server, counter, sockets, room, userData) => {
     let url = new URL(req.url);
 
     /* create Token */
