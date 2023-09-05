@@ -127,8 +127,9 @@ export let MongoCustom = ((param: string) => {
 
     }
 
-    let mongoGetById = async () => {
-
+    let mongoGetById = async (checkContent: object, selectCollection: string) => {
+        let collection = db.collection(escapeHTML(selectCollection))
+        return await collection.findOne(checkContent)
     }
 
     let mongoDelete = async () => {
@@ -141,6 +142,7 @@ export let MongoCustom = ((param: string) => {
         getAll: mongoGetAll,
         GetBy: mongoGetBy,
         GetByOne: mongoGetByOne,
+        GetById: mongoGetById
         //update: mongoUpdate,
         //delete: mongoDelete
     };

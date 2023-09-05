@@ -148,6 +148,16 @@ export let GetRequest = async (req, server, counter, sockets, room, userData) =>
 
     if (url.pathname === "/testAccount" && req.method === method.GET) {
         //need code
+        // Mongo Custom not implemant
+
+        let data = await mongoCustom.GetById({ user: url.searchParams.get("user") }, "acc");
+        console.log(data)
+        let password_verify = await Bun.password.verify(url.searchParams.get("password"), data.password)
+        console.log(password_verify)
+        return new Response("cookie empty", {
+            status: 200,
+            headers: customHeader,
+        });
     }
 
     // LogOut
