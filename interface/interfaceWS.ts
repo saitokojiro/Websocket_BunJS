@@ -1,6 +1,8 @@
-export interface ISAccountSend{
-  id: string, 
+
+export interface ISAccountSend {
+  id: string,
   user: string,
+  password: string
   create_At: Date,
   enable: boolean,
 }
@@ -17,9 +19,3 @@ export interface ISMessageSend {
   media: string;
   date: string;
 }
-
-/*
-id: escapeHTML(accountJson.id), 
-            user: escapeHTML(accountJson.user),
-            create_At: escapeHTML(accountJson.create_At),
-            enable: escapeHTML(accountJson.enable),*/

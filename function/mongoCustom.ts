@@ -32,15 +32,17 @@ mongoCustom.configNameDatabase()
 export let MongoCustom = ((param: string) => {
     let db = client.db(param);
 
-    let mongoVerificationCollectionUser = async (typeC : string)=>{
+    let mongoVerificationCollectionUser = async (typeC: string) => {
         const collections = await db.listCollections().toArray();
-        const collection_type = collections.find(c=> c.name === typeC);
-        if(collection_type){
+        const collection_type = collections.find(c => c.name === typeC);
+        console.log(collection_type)
+        console.log(typeC)
+        if (collection_type) {
             return collection_type
-        }else{
+        } else {
             return typeC
         }
-        
+
 
     }
     let mongoVerificationCollectionExist = async (id_user_one: string, id_user_two: string) => {
@@ -59,15 +61,14 @@ export let MongoCustom = ((param: string) => {
 
     }
 
-    let mongoAnyPush = async (type: any, anyJson: Object) => {        
+    let mongoAnyPush = async (type: any, anyJson: Object, onlyCollection = true) => {
         let verification = await mongoVerificationCollectionUser(type)
-        const collection = db.collection(escapeHTML(verification));
-        await collection.insertOne(anyJson); 
+        const collection = db.collection(escapeHTML(onlyCollection == true ? verification : type));
+        await collection.insertOne(anyJson);
     }
 
-    let mongoPush = async (messageJson: ISMessageSend) => {        
+    let mongoPush = async (messageJson: ISMessageSend) => {
         let verification = await mongoVerificationCollectionExist(messageJson.to, messageJson.sender)
-        console.log(verification)
         const collection = db.collection(escapeHTML(verification));
         await collection.insertOne({
             id: escapeHTML(messageJson.id),
@@ -81,53 +82,54 @@ export let MongoCustom = ((param: string) => {
             date: escapeHTML(messageJson.date)
         });
 
-        
+
 
     }
 
-    let mongoGetByOne = async (id_user_one: string, id_user_two: string , findObject: object) => {
+    let mongoGetByOne = async (id_user_one: string, id_user_two: string, findObject: object) => {
         let verification = await mongoVerificationCollectionExist(id_user_one, id_user_two)
         let collection = db.collection(escapeHTML(verification));
-        if((await collection.findOne(findObject)) !== null){
+        if ((await collection.findOne(findObject)) !== null) {
             console.log("in")
             return await collection.findOne(findObject);
         }
-        else{
+        else {
             console.log("out")
-            return await {"response":"no message found"}
+            return await { "response": "no message found" }
         }
-        
+
     }
 
-    let mongoGetBy = async (id_user_one: string, id_user_two: string , findObject: object) => {
+    let mongoGetBy = async (id_user_one: string, id_user_two: string, findObject: object) => {
         let verification = await mongoVerificationCollectionExist(id_user_one, id_user_two)
         let collection = db.collection(escapeHTML(verification));
         console.log(await collection.find(findObject).toArray())
-        
-        if((await collection.find(findObject).toArray()).length !== 0){
+
+        if ((await collection.find(findObject).toArray()).length !== 0) {
             //return await collection.find().toArray();
             return await collection.find(findObject).toArray();
         }
-        else{
-            return await [{"response":"no message found"}]
+        else {
+            return await [{ "response": "no message found" }]
         }
     }
 
     let mongoGetAll = async (id_user_one: string, id_user_two: string) => {
         let verification = await mongoVerificationCollectionExist(id_user_one, id_user_two)
         let collection = db.collection(escapeHTML(verification));
-        if((await collection.find().toArray()).length != 0){
+        if ((await collection.find().toArray()).length != 0) {
             //return await collection.find().toArray();
             return await collection.find().toArray();
         }
-        else{
-            return await [{"response":"no message found"}]
+        else {
+            return await [{ "response": "no message found" }]
         }
-        
+
     }
 
-    let mongoGetById = async () => {
-
+    let mongoGetById = async (checkContent: object, selectCollection: string) => {
+        let collection = db.collection(escapeHTML(selectCollection))
+        return await collection.findOne(checkContent)
     }
 
     let mongoDelete = async () => {
@@ -135,11 +137,12 @@ export let MongoCustom = ((param: string) => {
     }
 
     return {
-        pushAny:  mongoAnyPush,
-        push:  mongoPush,
+        pushAny: mongoAnyPush,
+        push: mongoPush,
         getAll: mongoGetAll,
         GetBy: mongoGetBy,
         GetByOne: mongoGetByOne,
+        GetById: mongoGetById
         //update: mongoUpdate,
         //delete: mongoDelete
     };
