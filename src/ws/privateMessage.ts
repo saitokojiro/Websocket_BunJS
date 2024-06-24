@@ -1,13 +1,18 @@
 import { escapeHTML } from "bun";
+
+import { ISMessageSend } from "../../interface/interfaceWS";
+
 export let privateMesasge = (ws, message, sockets, mongoCustom) => {
     let messageJson = JSON.parse(message);
     mongoCustom.push(messageJson);
+    console.log(sockets.length)
     if (messageJson.type == "private message") {
-        sockets.some(async (el) => {
-            console.log(messageJson.to);
-            console.log(messageJson.sender);
-            console.log(messageJson);
-            if (el.data.token == messageJson.to) {
+        sockets.some((el) => {
+            console.log(el.data.user)
+            /* console.log(messageJson.to);
+             console.log(messageJson.sender);
+             console.log(messageJson);*/
+            if (el.data.id_User == messageJson.to) {
                 //@ts-ignore
                 let sendMessage: ISMessageSend = {
                     id: escapeHTML(messageJson.id),

@@ -1,12 +1,12 @@
 import { joseGroupeSign, joseGroupeVerify } from "../../function/joseFunction";
-import { method, customHeader } from "./../global"
+import { method } from "./../global"
 import { MongoCustom } from "../../function/mongoCustom";
 import cookieParser from "cookie";
 import { escapeHTML } from "bun";
 
 let mongoCustom = await MongoCustom("message");
 
-export let GetRequest = async (req, server, counter, sockets, room, userData) => {
+export let GetRequest = async (req, server, counter, sockets, room, userData, headers) => {
     let url = new URL(req.url);
 
     // Get user Message 
@@ -45,14 +45,14 @@ export let GetRequest = async (req, server, counter, sockets, room, userData) =>
                         };
                         let res = new Response(JSON.stringify(resp), {
                             status: 200,
-                            headers: customHeader,
+                            headers: headers,
                         });
 
                         return res;
                     } else {
                         let res = new Response("invalid token", {
                             status: 401,
-                            headers: customHeader,
+                            headers: headers,
                         });
 
                         return res;
@@ -84,7 +84,7 @@ export let GetRequest = async (req, server, counter, sockets, room, userData) =>
 
     // Get Connection
     if (url.pathname === "/connection" && req.method === "GET") {
-        //console.log(req)
+
         if (req.headers.get("cookie") !== null) {
             console.log("------------");
             //console.log(req.headers.get("cookie"));
@@ -123,25 +123,25 @@ export let GetRequest = async (req, server, counter, sockets, room, userData) =>
                         console.log(verificationJWT.status);
                         return new Response("error", {
                             status: 401,
-                            headers: customHeader,
+                            headers: headers,
                         });
                     }
                 } else {
                     return new Response("error", {
                         status: 401,
-                        headers: customHeader,
+                        headers: headers,
                     });
                 }
             } else {
                 return new Response("error", {
                     status: 401,
-                    headers: customHeader,
+                    headers: headers,
                 });
             }
         } else {
             return new Response("cookie empty", {
                 status: 401,
-                headers: customHeader,
+                headers: headers,
             });
         }
     }
@@ -156,7 +156,7 @@ export let GetRequest = async (req, server, counter, sockets, room, userData) =>
         console.log(password_verify)
         return new Response("cookie empty", {
             status: 200,
-            headers: customHeader,
+            headers: headers,
         });
     }
 
@@ -168,7 +168,7 @@ export let GetRequest = async (req, server, counter, sockets, room, userData) =>
         };
         let res = new Response(JSON.stringify(logoutJson), {
             status: 200,
-            headers: customHeader,
+            headers: headers,
             /*
                 headers: {
                   "Content-Type": "application/json",
@@ -191,4 +191,22 @@ export let GetRequest = async (req, server, counter, sockets, room, userData) =>
 
         return res;
     }
+
+
+
+    if (url.pathname === "/admin") {
+        server.upgrade(req, {
+            data: {
+                _logger: true,
+                id_User: "45683233",
+                token: "45683233",
+                user: "admin",
+                room: room,
+                counter: counter
+            }
+
+        })
+
+    }
+
 };

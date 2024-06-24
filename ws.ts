@@ -8,6 +8,9 @@ import { test } from "bun:test";
 import { GetRequest } from "./src/http/requestGet";
 import { PostRequest } from "./src/http/requestPost";
 import { privateMesasge } from "./src/ws/privateMessage";
+import { http } from "./src/http/http";
+import { headers, method } from "./src/global";
+
 
 let mongoCustom = await MongoCustom("message");
 
@@ -40,11 +43,9 @@ let privateKey = async () => {
 let msgServer = async () => {
   console.log("Server Info :");
   console.log("Status: running");
-  console.log("Engine: Bun.js 0.6.9");
-  console.log("Version: 0.0.5");
+  console.log("Engine: Bun.js 1.1.16");
+  console.log("Version: 0.1.1");
   console.log(`server address: ws://${ipAdress}:${ServerPort}`);
-  //console.log(publicKeyString);
-  //console.log(await testing())
 };
 
 //token test
@@ -62,38 +63,29 @@ let counter: number = 0;
 let sockets: any[] = [];
 let room: any[] = [];
 let userData: any[] = [];
-/*
-let customHeader: HeadersInit = {
-  "Content-Type": "application/json",
-  "Access-Control-Allow-Credentials": "true",
-  "Access-Control-Allow-Origin": "http://127.0.0.1:3000",
-};*/
 
 Bun.serve({
   port: 3987,
+  //hostname: "192.168.1.61",
   //@ts-ignore
   msgconsole: msgServer(),
   async fetch(req, server) {
     let url = new URL(req.url);
 
-    await GetRequest(req, server, counter, sockets, room, userData)
-    await PostRequest(req, server, counter, sockets, room, userData)
 
+    if (req.method === "OPTIONS") {
+      // Répondre aux requêtes OPTIONS avec les en-têtes CORS appropriés
+      return new Response(null, { status: 204, headers });
+    }
+    if (req.method === method.GET) {
+      // Répondre aux requêtes OPTIONS avec les en-têtes CORS appropriés
+      return GetRequest(req, server, counter, sockets, room, userData, headers)
 
-
-
-
-    if (url.pathname === "/admin") {
-      server.upgrade(req, {
-        data: {
-          _logger: true,
-          id_User: "45683233",
-          token: "45683233",
-          user: "admin",
-          room: room,
-          counter: counter
-        }
-      })
+    }
+    if (req.method === method.POST) {
+      // Répondre aux requêtes OPTIONS avec les en-têtes CORS appropriés
+      return PostRequest(req, server, counter, sockets, room, userData, headers)
+      //return http(req, null, null, null, null, null)
     }
 
     return new Response("Regular HTTP response : 200 ");
@@ -123,23 +115,15 @@ Bun.serve({
       userData.push({
         user: escapeHTML(ws.data.user),
         id_User: escapeHTML(ws.data.id_User),
-        token: escapeHTML(ws.data.token),
+        //token: escapeHTML(ws.data.token),
       });
-      //console.log(ws.data);
       let listUserData = { cat: "userlist", list: userData };
-      //console.log(userData);
-
-      console.log(listUserData)
 
       //@ts-ignore
       ws.publish("welcome", JSON.stringify(messageAll));
       ws.publish("UserList", JSON.stringify(listUserData));
 
-      ws.send(JSON.stringify({ token: escapeHTML(ws.data.token) }));
-      sockets.some((el) => {
-        //console.log(el.data.token);
-        //console.log(el.data.user);
-      });
+      //ws.send(JSON.stringify({ token: escapeHTML(ws.data.token) }));
 
       counter++;
     },
@@ -158,6 +142,7 @@ Bun.serve({
 
     },
 
+
     /**
      *  WS close :
      *  main
@@ -173,7 +158,7 @@ Bun.serve({
           temporis.push(el);
           temporisUser.push({
             user: escapeHTML(el.data.user),
-            id_User: escapeHTML(el.data.token),
+            id_User: escapeHTML(el.data.id_User),
           });
         }
       });
