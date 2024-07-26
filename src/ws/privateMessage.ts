@@ -4,9 +4,9 @@ import { ISMessageSend } from "../../interface/interfaceWS";
 
 export let privateMesasge = (ws, message, sockets, mongoCustom) => {
     let messageJson = JSON.parse(message);
-    mongoCustom.push(messageJson);
-    console.log(sockets.length)
+
     if (messageJson.type == "private message") {
+        mongoCustom.push(messageJson);
         sockets.some((el) => {
             console.log(el.data.user)
             /* console.log(messageJson.to);
@@ -24,6 +24,7 @@ export let privateMesasge = (ws, message, sockets, mongoCustom) => {
                     typeMedia: escapeHTML(messageJson.typeMedia),
                     media: escapeHTML(messageJson.media),
                     date: escapeHTML(messageJson.date),
+                    read: false
                 };
 
                 el.send(JSON.stringify(sendMessage));

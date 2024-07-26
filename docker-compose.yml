@@ -1,14 +1,14 @@
-version: "3.0"
+version: "4.0"
 services:
-  bunworker:
-    image: oven/bun
-    container_name: bunworker
-    working_dir: '/src/app/'
-    ports:
-      - 3987:3987
-    volumes:
-      - ./:/src/app/
-    command: bash -c "bun ws.ts"
+  # bunworker:
+  #   image: oven/bun
+  #   container_name: bunworker
+  #   working_dir: '/src/app/'
+  #   ports:
+  #     - 3987:3987
+  #   volumes:
+  #     - ./:/src/app/
+  #   command: bash -c "bun ws.ts"
   mongo:
     image: mongo
     restart: always
@@ -27,5 +27,4 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: admin
       ME_CONFIG_MONGODB_ADMINPASSWORD: pass
       ME_CONFIG_MONGODB_URL: mongodb://admin:pass@mongo:27017/?useUnifiedTopology=true
-
 ##docker-compose down -v

@@ -2,7 +2,7 @@ import { ISAccountSend, ISMessageSend } from "./interface/interfaceWS";
 import cookieParser from "cookie";
 import { escapeHTML, serve } from "bun";
 import { MongoClient } from "mongodb";
-import { MongoCustom } from "./function/mongoCustom";
+import { MongoCustom, statusDB } from "./function/mongoCustom";
 import * as jose from "jose";
 import { test } from "bun:test";
 import { GetRequest } from "./src/http/requestGet";
@@ -10,12 +10,27 @@ import { PostRequest } from "./src/http/requestPost";
 import { privateMesasge } from "./src/ws/privateMessage";
 import { http } from "./src/http/http";
 import { headers, method } from "./src/global";
-
-
-let mongoCustom = await MongoCustom("message");
+import { TypingMessage } from "./src/ws/TypingMessage";
 
 let ipAdress: string = "127.0.0.1";
 let ServerPort: number = 3987;
+
+let msgServer = async () => {
+  console.log("Server Info :");
+  console.log("Status: running");
+  console.log("Engine: Bun.js 1.1.17");
+  console.log("Version: 0.1.2");
+  console.log(`server address: http://${ipAdress}:${ServerPort}`);
+  console.log(`server websocket: ws://${ipAdress}:${ServerPort}`);
+  console.log('Https: ' + false)
+  console.log('Status DB: ' + statusDB)
+};
+
+await msgServer()
+
+let mongoCustom = await MongoCustom("message");
+let mongoAccount = await MongoCustom("account");
+
 
 /*
 let method = {
@@ -40,13 +55,7 @@ let privateKey = async () => {
   }
 };*/
 
-let msgServer = async () => {
-  console.log("Server Info :");
-  console.log("Status: running");
-  console.log("Engine: Bun.js 1.1.16");
-  console.log("Version: 0.1.1");
-  console.log(`server address: ws://${ipAdress}:${ServerPort}`);
-};
+
 
 //token test
 
@@ -65,10 +74,10 @@ let room: any[] = [];
 let userData: any[] = [];
 
 Bun.serve({
-  port: 3987,
-  //hostname: "192.168.1.61",
+  port: ServerPort,
+  hostname: ipAdress,
   //@ts-ignore
-  msgconsole: msgServer(),
+  //msgconsole: msgServer(),
   async fetch(req, server) {
     let url = new URL(req.url);
 
@@ -90,6 +99,11 @@ Bun.serve({
 
     return new Response("Regular HTTP response : 200 ");
   },
+  /*tls: {
+    key: Bun.file("./cert/key.pem"),
+    cert: Bun.file("./cert/cert.pem"),
+    passphrase: "admin",
+  },*/
   websocket: {
     publishToSelf: true,
 
@@ -139,6 +153,7 @@ Bun.serve({
       //@ts-ignore
 
       privateMesasge(_ws, message, sockets, mongoCustom)
+      TypingMessage(_ws, message, sockets)
 
     },
 
@@ -169,6 +184,8 @@ Bun.serve({
       console.log(userData);
 
       let listUserData = { cat: "disconnect", list: userData };
+      //let listUserData = { cat: "userlist", list: userData };
+
       ws.publish("UserList", JSON.stringify(listUserData));
       counter--;
     },

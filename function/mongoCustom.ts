@@ -4,9 +4,11 @@ import { ISAccountSend, ISMessageSend } from "../interface/interfaceWS";
 
 
 const client = new MongoClient(process.env.MONGO_DB);
+export let statusDB = ""
 
 try {
-    await client.connect()
+    await client.connect().then(() => statusDB = "Online").catch(err => statusDB = "Offline")
+
 } catch (error) {
     console.log(error)
 }
@@ -136,14 +138,19 @@ export let MongoCustom = ((param: string) => {
 
     }
 
+    let mongoUpdate = async (checkContent: object, update: object, selectCollection: string) => {
+        let collection = db.collection(escapeHTML(selectCollection))
+        return await collection.updateOne(checkContent, update)
+    }
+
     return {
         pushAny: mongoAnyPush,
         push: mongoPush,
         getAll: mongoGetAll,
         GetBy: mongoGetBy,
         GetByOne: mongoGetByOne,
-        GetById: mongoGetById
-        //update: mongoUpdate,
+        GetById: mongoGetById,
+        update: mongoUpdate,
         //delete: mongoDelete
     };
     //};

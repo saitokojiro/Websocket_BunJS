@@ -1,0 +1,94 @@
+version: "4.0"
+services:
+  # bunworker:
+  #   image: oven/bun
+  #   container_name: bunworker
+  #   working_dir: '/src/app/'
+  #   ports:
+  #     - 3987:3987
+  #   volumes:
+  #     - ./:/src/app/
+  #   command: bash -c "bun ws.ts"
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: pass
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: pass
+      ME_CONFIG_MONGODB_URL: mongodb://admin:pass@mongo:27017/?useUnifiedTopology=true
+
+  nginx-manager:
+    image: "jc21/nginx-proxy-manager:latest"
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "81:81"
+      - "443:443"
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+  nginx:
+    image: nginx
+    volumes:
+      - ./templates:/etc/nginx/templates
+    ports:
+      - "8080:80"
+    environment:
+      - NGINX_HOST=foobar.com
+      - NGINX_PORT=80
+
+  pihole:
+    hostname: pihole
+    container_name: pihole
+    image: pihole/pihole:latest
+    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+    # networks:
+    #   pih_network:
+    #     ipv4_address: 192.168.1.61 #**Change, use pihole address
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      # - "67:67/udp" # Only required if you are using Pi-hole as your DHCP server
+      - "8083:80/tcp"
+    environment:
+      TZ: "Europe/Paris"
+      WEBPASSWORD: "12345678"
+    # Volumes store your data between container upgrades
+    volumes:
+      - "./etc-pihole:/etc/pihole"
+      - "./etc-dnsmasq.d:/etc/dnsmasq.d"
+    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+    cap_add:
+      - NET_ADMIN # Required if you are using Pi-hole as your DHCP server, else not needed saitokojiro974@
+    restart: unless-stopped
+
+  portainer:
+    image: portainer/portainer-ce
+    ports:
+      - 9000:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    restart: always
+
+volumes:
+  portainer_data:
+
+networks:
+  pih_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24 #**Your network subnet
+##docker-compose down -v
