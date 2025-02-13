@@ -28,8 +28,6 @@ export let joseGroupeVerify: any = async (token: string) => {
             //issuer: 'urn:example:issuer',
             //audience: 'urn:example:audience',
         });
-        //console.log(payload)
-        //console.log(protectedHeader)
         return { payload: payload, protectedHeader: protectedHeader, status: true };
     } catch (error) {
         console.log("invalid token");

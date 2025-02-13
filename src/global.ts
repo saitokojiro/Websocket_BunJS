@@ -70,3 +70,28 @@ let RateLimite = (req) => {
     }
 
 }
+
+export let checkPassword = async (password, checkPassword) => {
+    try {
+        const hash = await Bun.password.verify(password, checkPassword)
+        return hash
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+let matchForm = (EmailName, EmailNameCheck, Password, PasswordCheck) => {
+    if (EmailName !== EmailNameCheck) {
+        if (Password !== PasswordCheck) {
+            return { error: "email & password invalid", isValid: false }
+        }
+        return { error: "email invalid", isValid: false }
+    }
+    if (Password !== PasswordCheck) {
+        if (EmailName !== EmailNameCheck) {
+            return { error: "email & password invalid", isValid: false }
+        }
+        return { error: "password invalid", isValid: false }
+    }
+    return { error: "information match", isValid: true }
+}

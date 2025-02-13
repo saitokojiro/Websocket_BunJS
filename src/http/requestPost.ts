@@ -1,5 +1,5 @@
 import { joseGroupeSign, joseGroupeVerify } from "../../function/joseFunction";
-import { delayedResponse, headersSecurity, method, randomDelayedResponse } from "./../global"
+import { checkPassword, delayedResponse, headersSecurity, method, randomDelayedResponse } from "./../global"
 import { MongoCustom } from "../../function/mongoCustom";
 import cookieParser from "cookie";
 import { escapeHTML } from "bun";
@@ -25,7 +25,6 @@ export let PostRequest = async (req, server, counter, sockets, room, userData, h
                 token: await joseGroupeSign({
                     id: url.searchParams.get("id"),
                     user: url.searchParams.get("user"),
-                    //"password": url.searchParams.get("password"),
                 }),
                 data: {
                     id: url.searchParams.get("id"),
@@ -114,7 +113,8 @@ export let PostRequest = async (req, server, counter, sockets, room, userData, h
                     let accountFind = mongoAccount.GetById({ email: sanity }, "account")
                     return accountFind.then(async (ev) => {
                         if (ev == null) return { error: "account not find" };
-                        if (ev.password !== EJson.password) return { error: "password incorrect" };
+                        let passIsValid = await checkPassword(EJson.password, ev.password).then(e => e)
+                        if (!passIsValid) return { error: "password incorrect" }
                         return ev
                     })
                 })
@@ -123,8 +123,8 @@ export let PostRequest = async (req, server, counter, sockets, room, userData, h
             }
         }
         let value = await func();
-        console.log(!value?.error)
         let resp;
+        let headerResp;
         if (!value?.error) {
             let dataConnection = {
                 user: escapeHTML(value.user),
@@ -143,27 +143,37 @@ export let PostRequest = async (req, server, counter, sockets, room, userData, h
             let sanityID = sanitize(value.id)
             mongoAccount.update({ id: sanityID }, { "$set": sanity }, "account")
             resp = JSON.stringify(dataConnection)
+            headerResp = dataConnection
         } else {
-            resp = value.error
+            resp = JSON.stringify(value)
         }
-
-        /*
-                let dataConnection = {
-                    token: await joseGroupeSign({
-                        id: ev.id,
-                        user: escapeHTML(ev.user)
-                        //"password": url.searchParams.get("password"),
-                    }),
-                    user: escapeHTML(ev.user),
-                    id: ev.id,
-                }
-                    */
-
 
         let res = new Response(resp, {
             status: 200,
             headers: headers,
         });
+
+        const cookieOptions = {
+            httpOnly: true,
+            secure: true, // Assurez-vous que cette option correspond à votre environnement (true en production avec HTTPS)
+            sameSite: "None", // Ou "Strict" ou "None" selon vos besoins ,Lax
+            domain: "127.0.0.1", // Assurez-vous que ce domaine correspond
+            path: "/"
+        };
+
+        res.headers.append(
+            "Set-Cookie",
+            `id_User=${headerResp.id}; HttpOnly=${cookieOptions.httpOnly}; SameSite=${cookieOptions.sameSite}; Secure=${cookieOptions.secure};Domain=${cookieOptions.domain};Path=${cookieOptions.path}`
+        );
+        res.headers.append(
+            "Set-Cookie",
+            `token=${headerResp.token};  HttpOnly=${cookieOptions.httpOnly}; SameSite=${cookieOptions.sameSite}; Secure=${cookieOptions.secure};Domain=${cookieOptions.domain};Path=${cookieOptions.path}`
+        );
+        res.headers.append(
+            "Set-Cookie",
+            `CSRF_TOKEN=${crypto.randomUUID()};  HttpOnly=${cookieOptions.httpOnly}; SameSite=${cookieOptions.sameSite}; Secure=${cookieOptions.secure};Domain=${cookieOptions.domain};Path=${cookieOptions.path}`
+        );
+
         return res
     }
     // creation de compte 

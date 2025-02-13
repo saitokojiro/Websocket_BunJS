@@ -176,3 +176,5 @@ _*.js
 
 rsakey/
 cert/
+
+data/*

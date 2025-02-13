@@ -11,10 +11,17 @@ export let GetRequest = async (req, server, counter, sockets, room, userData, he
 
     // Get user Message 
     if (url.pathname === "/getMessageUser" && req.method === method.GET) {
+
+
+        //console.log(req.headers.get("cookie"))
+
+        //let urlMessage = new URL(req.url)
         if (req.headers.get("cookie") !== null) {
             // console.log("------------");
             let cookieClient = cookieParser.parse(req.headers.get("cookie"));
             let userParams = escapeHTML(url.searchParams.get("user"));
+            let limitParams = escapeHTML(url.searchParams.get("user"));
+            let pageParams = escapeHTML(url.searchParams.get("user"));
             if (
                 cookieClient.id_User !== undefined &&
                 cookieClient.token !== undefined &&
@@ -27,28 +34,27 @@ export let GetRequest = async (req, server, counter, sockets, room, userData, he
                     userParams !== null &&
                     cookieClient.token !== null
                 ) {
+
                     let tokenverify = await joseGroupeVerify(cookieClient.token);
-                    //   console.log(tokenverify)
-                    if (tokenverify.status !== null) {
-                        //console.log(escapeHTML(url.searchParams.get("iduserto")))
-                        //console.log(tokenverify.payload.id)
-                        //console.log(url.searchParams.get("iduserto"))
-                        //console.log( await mongoCustom.getAll(tokenverify.payload.id, url.searchParams.get("iduserto")))
+                    if (tokenverify.status !== null && tokenverify.status === true) {
+
 
                         let resp = {
                             data: {
                                 listMsg: await mongoCustom.getAll(
                                     tokenverify.payload.id,
-                                    url.searchParams.get("iduserto")
+                                    url.searchParams.get("user"), true
                                 ),
                             },
                         };
+                        let respS = { "her": "ok" }
                         let res = new Response(JSON.stringify(resp), {
                             status: 200,
                             headers: headers,
                         });
 
                         return res;
+
                     } else {
                         let res = new Response("invalid token", {
                             status: 401,

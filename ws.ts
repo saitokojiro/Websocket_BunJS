@@ -183,7 +183,7 @@ Bun.serve({
 
       console.log(userData);
 
-      let listUserData = { cat: "disconnect", list: userData };
+      let listUserData = { cat: "disconnect", list: userData, gb: ws.data.id_User };
       //let listUserData = { cat: "userlist", list: userData };
 
       ws.publish("UserList", JSON.stringify(listUserData));

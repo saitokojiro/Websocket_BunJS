@@ -26,9 +26,10 @@ export let privateMesasge = (ws, message, sockets, mongoCustom) => {
                     date: escapeHTML(messageJson.date),
                     read: false
                 };
-
+                console.log(sendMessage)
                 el.send(JSON.stringify(sendMessage));
-                console.log("ok")
+                sendMessage.type = 'updateLastMessage'
+                ws.send(JSON.stringify(sendMessage))
             }
         });
     }
