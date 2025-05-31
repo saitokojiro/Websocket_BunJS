@@ -129,6 +129,12 @@ Bun.serve({
       userData.push({
         user: escapeHTML(ws.data.user),
         id_User: escapeHTML(ws.data.id_User),
+        img: escapeHTML("https://picsum.photos/600/300"),
+        last_message: escapeHTML(""),
+        date: escapeHTML(new Date().toTimeString().slice(0, 8).slice(0, 5)),
+        hasNotification: escapeHTML("false"),
+        notification: escapeHTML(0),
+
         //token: escapeHTML(ws.data.token),
       });
       let listUserData = { cat: "userlist", list: userData };

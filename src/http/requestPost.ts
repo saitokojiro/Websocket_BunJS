@@ -122,7 +122,9 @@ export let PostRequest = async (req, server, counter, sockets, room, userData, h
                 console.log(error)
             }
         }
+        
         let value = await func();
+        console.log(value)
         let resp;
         let headerResp;
         if (!value?.error) {
@@ -144,14 +146,27 @@ export let PostRequest = async (req, server, counter, sockets, room, userData, h
             mongoAccount.update({ id: sanityID }, { "$set": sanity }, "account")
             resp = JSON.stringify(dataConnection)
             headerResp = dataConnection
+           
         } else {
+            
+            console.log("ok")
+            
             resp = JSON.stringify(value)
+            console.log(resp)
         }
 
         let res = new Response(resp, {
             status: 200,
             headers: headers,
         });
+        if( value?.error){
+        
+            res = new Response(resp, {
+                status: 401,
+                headers: headers,
+            });
+            return res;
+        }
 
         const cookieOptions = {
             httpOnly: true,
@@ -160,7 +175,7 @@ export let PostRequest = async (req, server, counter, sockets, room, userData, h
             domain: "127.0.0.1", // Assurez-vous que ce domaine correspond
             path: "/"
         };
-
+ 
         res.headers.append(
             "Set-Cookie",
             `id_User=${headerResp.id}; HttpOnly=${cookieOptions.httpOnly}; SameSite=${cookieOptions.sameSite}; Secure=${cookieOptions.secure};Domain=${cookieOptions.domain};Path=${cookieOptions.path}`
@@ -174,6 +189,7 @@ export let PostRequest = async (req, server, counter, sockets, room, userData, h
             `CSRF_TOKEN=${crypto.randomUUID()};  HttpOnly=${cookieOptions.httpOnly}; SameSite=${cookieOptions.sameSite}; Secure=${cookieOptions.secure};Domain=${cookieOptions.domain};Path=${cookieOptions.path}`
         );
 
+        
         return res
     }
     // creation de compte 

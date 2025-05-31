@@ -116,15 +116,15 @@ export let MongoCustom = ((param: string) => {
         }
     }
 
-    let mongoGetAll = async (id_user_one: string, id_user_two: string, haslimit: boolean = false, limit: number = 20, page: number = 0) => {
+    let mongoGetAll = async (id_user_one: string, id_user_two: string, haslimit: boolean = false, limit: number = 20, page: number = 0, order:any = {}) => {
         let verification = await mongoVerificationCollectionExist(id_user_one, id_user_two)
         let collection = db.collection(escapeHTML(verification));
         if ((await collection.find().toArray()).length != 0) {
             //return await collection.find().toArray();
             if (haslimit) {
-                return await collection.find().limit(limit).skip(limit * page).toArray();
+                return await collection.find().sort(order).limit(limit).skip(limit * page).toArray();
             } else {
-                return await collection.find().toArray();
+                return (await collection.find().sort(order).toArray());
             }
             //return await collection.find().limit(20).skip(20).toArray();
         }

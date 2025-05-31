@@ -8,7 +8,7 @@ export let privateMesasge = (ws, message, sockets, mongoCustom) => {
     if (messageJson.type == "private message") {
         mongoCustom.push(messageJson);
         sockets.some((el) => {
-            console.log(el.data.user)
+            console.log(messageJson.message)
             /* console.log(messageJson.to);
              console.log(messageJson.sender);
              console.log(messageJson);*/
@@ -25,9 +25,13 @@ export let privateMesasge = (ws, message, sockets, mongoCustom) => {
                     media: escapeHTML(messageJson.media),
                     date: escapeHTML(messageJson.date),
                     read: false
+
                 };
-                console.log(sendMessage)
-                el.send(JSON.stringify(sendMessage));
+                if (messageJson.to !== messageJson.sender) {
+                    console.log(sendMessage)
+                    el.send(JSON.stringify(sendMessage));
+
+                }
                 sendMessage.type = 'updateLastMessage'
                 ws.send(JSON.stringify(sendMessage))
             }

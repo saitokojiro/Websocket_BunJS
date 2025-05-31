@@ -1,0 +1,9 @@
+server {
+    listen ${NGINX_PORT};
+    server_name ${NGINX_HOST};
+
+    location / {
+        proxy_pass http://192.167.1.61:3000;
+        # ... reste de la config proxy
+    }
+}
