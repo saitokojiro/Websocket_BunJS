@@ -235,6 +235,7 @@ export let PostRequest = async (req, server, counter, sockets, room, userData, h
 
         let resp = {
             data: "",
+            isValid: false,
             response: "method " + req.method + " path : " + url.pathname,
         };
         if (FindAcc?.error) {
@@ -252,12 +253,14 @@ export let PostRequest = async (req, server, counter, sockets, room, userData, h
                 mongoAccount.pushAny("account", SaveAccountDb, false);
                 resp = {
                     data: "account created",
+                    isValid: true,
                     response: "method " + req.method + " path : " + url.pathname,
                 };
             }
             else {
                 resp = {
                     data: "email invalid",
+                    isValid: false,
                     response: "method " + req.method + " path : " + url.pathname,
                 };
             }
@@ -267,6 +270,7 @@ export let PostRequest = async (req, server, counter, sockets, room, userData, h
         } else {
             resp = {
                 data: "account existing",
+                isValid: false,
                 response: "method " + req.method + " path : " + url.pathname,
             };
         }

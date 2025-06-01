@@ -12,7 +12,13 @@ export let TypingMessage = (ws, message, sockets) => {
                 sender: escapeHTML(messageJson.sender)
             }
 
-            el.send(JSON.stringify(typingMessage))
+            if (messageJson.to !== messageJson.sender) {
+                console.log(typingMessage)
+                el.send(JSON.stringify(typingMessage));
+
+            }
+
+            //el.send(JSON.stringify(typingMessage))
         })
     }
 }

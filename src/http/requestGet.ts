@@ -106,7 +106,7 @@ export let GetRequest = async (
                                     true,
                                     1,
                                     0,
-                                    {_id:-1}
+                                    { _id: -1 }
                                 ),
                             },
                         };
@@ -229,7 +229,7 @@ export let GetRequest = async (
                     "account"
                 );
 
-                console.log(dataa == null );
+                console.log(dataa == null);
                 if (dataa !== null) {
                     let verificationJWT = await joseGroupeVerify(cookieClient.token);
                     if (verificationJWT.status === false) {
@@ -246,11 +246,22 @@ export let GetRequest = async (
                             status: 200,
                             headers: headers,
                         });
-
                         res.headers.append(
                             "Set-Cookie",
-                            `token=${cookieClient.token}; HttpOnly; SameSite=None; Secure;`
+                            `id_User=${cookieClient.id_User}; HttpOnly; SameSite=None; Secure;Domain=127.0.0.1;Path=/`
                         );
+                        res.headers.append(
+                            "Set-Cookie",
+                            `token=${cookieClient.token}; HttpOnly; SameSite=None; Secure;Domain=127.0.0.1;Path=/`
+                        );
+                        res.headers.append(
+                            "Set-Cookie",
+                            `CSRF_TOKEN=${crypto.randomUUID()}; HttpOnly; SameSite=None; Secure;Domain=127.0.0.1;Path=/`
+                        );
+
+
+                        
+
                         return res;
                     }
 
