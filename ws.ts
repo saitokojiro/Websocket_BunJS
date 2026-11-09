@@ -11,6 +11,7 @@ import { privateMesasge } from "./src/ws/privateMessage";
 import { http } from "./src/http/http";
 import { headers, method } from "./src/global";
 import { TypingMessage } from "./src/ws/TypingMessage";
+import { ConnectOpen } from "./src/ws/open/ConnectOpen";
 
 let ipAdress: string = "127.0.0.1";
 let ServerPort: number = 3987;
@@ -18,7 +19,7 @@ let ServerPort: number = 3987;
 let msgServer = async () => {
   console.log("Server Info :");
   console.log("Status: running");
-  console.log("Engine: Bun.js 1.1.17");
+  console.log("Engine: Bun.js 1.3.14");
   console.log("Version: 0.1.2");
   console.log(`server address: http://${ipAdress}:${ServerPort}`);
   console.log(`server websocket: ws://${ipAdress}:${ServerPort}`);
@@ -29,7 +30,7 @@ let msgServer = async () => {
 await msgServer()
 
 let mongoCustom = await MongoCustom("message");
-let mongoAccount = await MongoCustom("account");
+let mongoAccount = await MongoCustom("Account");
 
 
 /*
@@ -80,8 +81,7 @@ Bun.serve({
   //msgconsole: msgServer(),
   async fetch(req, server) {
     let url = new URL(req.url);
-
-
+  
     if (req.method === "OPTIONS") {
       // Répondre aux requêtes OPTIONS avec les en-têtes CORS appropriés
       return new Response(null, { status: 204, headers });
@@ -117,6 +117,10 @@ Bun.serve({
         }, 0);
       }
 
+
+      ConnectOpen(ws, sockets, userData, { mongoAccount, mongoCustom });
+
+      /*
       console.log("pass")
       ws.subscribe("welcome");
       ws.subscribe("UserList");
@@ -143,7 +147,7 @@ Bun.serve({
       ws.publish("welcome", JSON.stringify(messageAll));
       ws.publish("UserList", JSON.stringify(listUserData));
 
-      //ws.send(JSON.stringify({ token: escapeHTML(ws.data.token) }));
+      //ws.send(JSON.stringify({ token: escapeHTML(ws.data.token) }));*/
 
       counter++;
     },

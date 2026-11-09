@@ -88,16 +88,16 @@ export let MongoCustom = ((param: string) => {
 
     }
 
-    let mongoGetByOne = async (id_user_one: string, id_user_two: string, findObject: object) => {
+    let mongoGetByOne = async (id_user_one: string, id_user_two: string, findObject: object, params:object={}) => {
         let verification = await mongoVerificationCollectionExist(id_user_one, id_user_two)
         let collection = db.collection(escapeHTML(verification));
         if ((await collection.findOne(findObject)) !== null) {
             console.log("in")
-            return await collection.findOne(findObject);
+            return await collection.findOne(findObject, params);
         }
         else {
             console.log("out")
-            return await { "response": "no message found" }
+            return await { err: "no message found" }
         }
 
     }
@@ -116,9 +116,12 @@ export let MongoCustom = ((param: string) => {
         }
     }
 
-    let mongoGetAll = async (id_user_one: string, id_user_two: string, haslimit: boolean = false, limit: number = 20, page: number = 0, order:any = {}) => {
+    let mongoGetAll = async (id_user_one: string, id_user_two?: string, haslimit: boolean = false, limit: number = 20, page: number = 0, order: any = {}) => {
+
+
         let verification = await mongoVerificationCollectionExist(id_user_one, id_user_two)
         let collection = db.collection(escapeHTML(verification));
+
         if ((await collection.find().toArray()).length != 0) {
             //return await collection.find().toArray();
             if (haslimit) {
@@ -132,6 +135,23 @@ export let MongoCustom = ((param: string) => {
             return await [{ "response": "no message found" }]
         }
 
+    }
+
+    let mongoGetAllColl = async (getContent: object,parm: object, collectionName: string, haslimit: boolean = false,order: any = {}, limit: number = 20, page: number=0) => {
+        let collection = db.collection(escapeHTML(collectionName));
+        //return await collection.find(checkContent).toArray();
+        if ((await collection.find().toArray()).length != 0) {
+            //return await collection.find().toArray();
+            if (haslimit) {
+                return await collection.find(getContent,parm).sort(order).limit(limit).skip(limit * page).toArray();
+            } else {
+                return (await collection.find(getContent,parm).sort(order).toArray());
+            }
+            //return await collection.find().limit(20).skip(20).toArray();
+        }
+        else {
+            return await [{ "response": "no message found" }]
+        }
     }
 
     let mongoGetById = async (checkContent: object, selectCollection: string) => {
@@ -148,6 +168,8 @@ export let MongoCustom = ((param: string) => {
         return await collection.updateOne(checkContent, update)
     }
 
+    
+
     return {
         pushAny: mongoAnyPush,
         push: mongoPush,
@@ -155,6 +177,7 @@ export let MongoCustom = ((param: string) => {
         GetBy: mongoGetBy,
         GetByOne: mongoGetByOne,
         GetById: mongoGetById,
+        GetAllColl : mongoGetAllColl,
         update: mongoUpdate,
         //delete: mongoDelete
     };
